@@ -68,7 +68,7 @@
       '<span class="muted">Files</span><b>' + e.files.length + " attached</b></div>" +
       '<div class="lbl">Cards in this entry</div><div class="row wrap" style="gap:16px">' +
       CARDS.map(([k, l]) => '<label class="row sm" style="gap:6px"><input type="checkbox" data-b="' + P + ".cards." + k + '" data-render="1" data-log="Changed which cards are used" ' + (cd[k] ? "checked" : "") + " " + dis + ' style="accent-color:var(--acc);margin:0">' + l + "</label>").join("") +
-      '<span class="muted sm">Switch off what this experiment does not need, for example the chip map. Nothing is deleted.</span></div>' +
+      '<span class="muted sm">' + (e.locked ? "Unlock the entry to change which cards are used." : "Switch off what this experiment does not need, for example the chip map. Nothing is deleted.") + "</span></div>" +
       '<div class="row"><button class="link sm" style="color:#b42318" data-a="delEntry">Delete this entry</button></div></div>';
   }
   function materials(e) {
@@ -87,11 +87,11 @@
   function procedure(e) {
     const P = "D.entries." + e.id, dis = e.locked ? "disabled" : "", total = e.steps.length, done = e.steps.filter(s => s.done).length;
     const mp = e.map, cells = mp.cells, loaded = cells.filter(c => c.on).length, empties = cells.map((c, i) => (c.on ? 0 : i + 1)).filter(Boolean);
-    const steps = '<div class="card"><div class="row"><h3 class="grow">Procedure</h3><span class="sm" style="color:var(--acc-d);font-weight:600">' + done + " of " + total + '</span></div><div class="bar"><i style="width:' + (total ? Math.round(done / total * 100) : 0) + '%"></i></div>' +
+    const steps = '<div class="card"><div class="row"><h3 class="grow">Procedure</h3><span class="sm" style="color:var(--acc-d);font-weight:600">' + done + " of " + total + '</span><button class="link sm" data-a="hideCard" data-card="procedure" ' + dis + ' title="Hide this card in this entry">Hide card</button></div><div class="bar"><i style="width:' + (total ? Math.round(done / total * 100) : 0) + '%"></i></div>' +
       e.steps.map((s, i) => '<div class="step' + (s.done ? " done" : "") + '"><input type="checkbox" data-a="toggleStep" data-i="' + i + '" ' + (s.done ? "checked" : "") + " " + dis + ' aria-label="Done"><input type="text" aria-label="Step" data-b="' + P + ".steps." + i + '.t" data-log="Edited a step" value="' + esc(s.t) + '" ' + dis + '><button class="x" data-a="rmStep" data-i="' + i + '" ' + dis + ' aria-label="Remove step">×</button></div>').join("") +
       (e.steps.length ? "" : '<div class="muted sm">No steps yet. Add them below, or start entries from a protocol.</div>') +
       '<input type="text" placeholder="+ Add a step and press Enter" aria-label="Add a step" data-b="tmp.newStep" data-enter="addStep" value="' + esc(LB.tmp.newStep || "") + '" ' + dis + ' autocomplete="off" style="border-width:0;border-top:1px solid var(--line2);border-radius:0;padding:10px 2px 2px"></div>';
-    const map = '<div class="card"><h3>Chip loading map</h3><div class="muted sm">Click a position to mark it loaded or empty.</div>' +
+    const map = '<div class="card"><div class="row"><h3 class="grow">Chip loading map</h3><button class="link sm" data-a="hideCard" data-card="chip" ' + dis + ' title="Hide this card in this entry">Hide card</button></div><div class="muted sm">Click a position to mark it loaded or empty.</div>' +
       '<div class="chipmap"><div class="port"><i></i>IN</div><div class="pipe"></div><div class="chamber" style="grid-template-columns:repeat(' + mp.cols + ',minmax(0,1fr))">' +
       cells.map((c, i) => '<button class="well' + (c.on ? " on" : "") + '" data-a="well" data-i="' + i + '" ' + dis + ' title="' + esc([c.note, c.amt].filter(Boolean).join(" · ")) + '"' + wellStyle(c) + ' aria-label="Position ' + (i + 1) + (c.on ? ", loaded" : ", empty") + '">' + (i + 1) + "</button>").join("") + '</div><div class="pipe"></div><div class="port out"><i></i>OUT</div></div>' +
       '<div class="mapset"><span class="mono">chamber · ' + loaded + "/" + cells.length + ' loaded</span><span class="grow"></span>Rows <input type="number" min="1" max="12" data-b="' + P + '.map.rows" data-t="num" data-act="mapResize" value="' + mp.rows + '" ' + dis + ">× columns <input type=\"number\" min=\"1\" max=\"12\" data-b=\"" + P + '.map.cols" data-t="num" data-act="mapResize" value="' + mp.cols + '" ' + dis + '><button class="link sm" data-a="mapFill" ' + dis + '>Fill all loaded…</button><button class="link sm" data-a="palette" data-i="all" ' + dis + '>Color all loaded…</button><button class="link sm" data-a="mapClear" ' + dis + ">Clear all</button></div>" +
@@ -102,7 +102,9 @@
       cells.map((c, i) => '<label class="posrow"><span class="pn' + (c.on ? " on" : "") + '">' + (i + 1) + '</span><input type="text" list="matlist" aria-label="Contents of position ' + (i + 1) + '" placeholder="' + (c.on ? "e.g. MCF-7 spheroid, 180 µm" : "empty") + '" data-b="' + P + ".map.cells." + i + '.note" data-log="Edited chip position notes" value="' + esc(c.note || "") + '" ' + dis + ' autocomplete="off"><input type="text" class="amt" aria-label="Amount in position ' + (i + 1) + '" placeholder="amount" title="Amount, e.g. 50 µL" data-b="' + P + ".map.cells." + i + '.amt" data-log="Edited chip position amounts" value="' + esc(c.amt || "") + '" ' + dis + ' autocomplete="off"><button class="swatch" data-a="palette" data-i="' + i + '" ' + dis + ' aria-label="Choose a color for position ' + (i + 1) + '" title="Color" style="' + (colOf(c) ? "background:" + colOf(c) + ";border-style:solid" : "") + '">' + (colOf(c) ? "" : "+") + '</button></label>' + (LB.tmp.palOpen === String(i) && !e.locked ? palette(i, colOf(c)) : "")).join("") + '</div>' +
       '<datalist id="matlist">' + e.mats.map(m => { const it = LB.D.items.find(x => x.id === m.id); return it ? '<option value="' + esc(it.name) + '">' : ""; }).join("") + '</datalist>' +
       '<div class="lbl">Notes on loading</div>' + T(2, mp.note || "", 'aria-label="Notes on loading" data-b="' + P + '.map.note" data-log="Edited loading notes" ' + dis) + "</div>";
-    return '<div class="two">' + (cardsOf(e).procedure ? steps : "") + (cardsOf(e).chip ? map : "") + "</div>";
+    const cd = cardsOf(e);
+    return '<div class="two">' + (cd.procedure ? steps : "") + (cd.chip ? map : "") + "</div>" +
+      (!cd.procedure || !cd.chip ? '<div class="row wrap">' + (!cd.procedure ? '<button class="btn" style="border-style:dashed" data-a="showCard" data-card="procedure" ' + dis + ">+ Add procedure steps</button>" : "") + (!cd.chip ? '<button class="btn" style="border-style:dashed" data-a="showCard" data-card="chip" ' + dis + ">+ Add chip loading map</button>" : "") + "</div>" : "");
   }
   function results(e) {
     const P = "D.entries." + e.id, dis = e.locked ? "disabled" : "";
@@ -181,6 +183,8 @@
   A.palette = el => { LB.tmp.palOpen = LB.tmp.palOpen === el.dataset.i ? null : el.dataset.i; LB.render(); };
   A.setColor = el => paint(el.dataset.i, el.dataset.c);
   A.customColor = el => { if (el.value) paint(el.dataset.i, el.value); };
+  A.hideCard = el => { const e = entryOK(); if (!e) return; cardsOf(e)[el.dataset.card] = false; LB.log(e, "Hid a card"); LB.save(); LB.render(); };
+  A.showCard = el => { const e = entryOK(); if (!e) return; cardsOf(e)[el.dataset.card] = true; LB.log(e, "Added a card back"); LB.save(); LB.render(); };
   A.mapFill = () => {
     const e = entryOK(); if (!e) return;
     const v = prompt("What do all the loaded positions contain? (e.g. MCF-7 spheroid, 150–200 µm)", "");
