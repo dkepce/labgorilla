@@ -4,7 +4,7 @@
 
   /* ---------- defaults & loading ---------- */
   const DEFAULT_S = { theme: "indigo" };
-  const DEFAULT_UI = { view: "notebook", cur: "", sec: 0, tab: 0, calMode: "month", sel: "", openExp: {}, openProj: {} };
+  const DEFAULT_UI = { view: "notebook", cur: "", sec: 0, tab: 0, calMode: "month", sel: "", openExp: {}, openProj: {}, exportOpts: { aim: true, materials: true, procedure: true, chip: true, results: true, files: true, conclusion: true, notes: true, comments: true, history: true } };
   const TYPES = ["cell line", "reagent", "medium", "chips", "drug", "antibody"];
   const SECTIONS = ["Overview", "Materials", "Procedure", "Results", "Conclusion"];
   LB.SECTIONS = SECTIONS;
@@ -14,6 +14,7 @@
   LB.D = load("labbook.data", null) || {};
   LB.ui = Object.assign({}, DEFAULT_UI, load("labbook.ui", null) || {});
   LB.ui.sel = LB.ui.sel || U.today();
+  LB.ui.exportOpts = Object.assign({}, DEFAULT_UI.exportOpts, LB.ui.exportOpts);
   LB.tmp = { treeQ: "", protoQ: "", invQ: "", invType: "", openItem: "", protoCur: "", showNewMat: false, newMat: { name: "", kind: "reagent", newKind: "", sub: "" }, evTitle: "", evTime: "", evKind: "imaging", comment: "", toast: "" };
 
   LB.fixData = function () {

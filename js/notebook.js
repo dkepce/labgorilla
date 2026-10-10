@@ -6,7 +6,7 @@
   const PAL = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6", "#3b82f6", "#8b5cf6", "#ec4899", "#a5b4fc", "#9ca3af"];
   const palette = (i, cur) => '<div class="palette">' + PAL.map(c => '<button class="pdot' + (c === cur ? " cur" : "") + '" data-a="setColor" data-i="' + i + '" data-c="' + c + '" style="background:' + c + '" aria-label="Color ' + c + '"></button>').join("") +
     '<button class="pdot none" data-a="setColor" data-i="' + i + '" data-c="" aria-label="No color" title="No color">∅</button><label class="sm muted" style="display:flex;gap:4px;align-items:center">Other <input type="color" class="pcol" value="' + (cur || "#a5b4fc") + '" data-act="customColor" data-i="' + i + '" data-b="tmp.customColor"></label></div>';
-  const wellStyle = c => { const k = colOf(c); if (!k) return ""; return c.on ? ' style="background:' + k + ";border-color:color-mix(in srgb," + k + ' 55%,#000)"' : ' style="border-color:' + k + ";background:color-mix(in srgb," + k + ' 22%,#fff)"'; };
+  const wellStyle = c => { const k = colOf(c); if (!k) return ""; return c.on ? ' style="background:' + k + ";border-color:color-mix(in srgb," + k + ' 55%,#000);color:#1b2030"' : ' style="border-color:color-mix(in srgb,' + k + ' 35%,#b9bdca)"'; };
   const T = (rows, v, extra) => '<textarea rows="' + rows + '" ' + extra + ">" + esc(v) + "</textarea>";
 
   /* ---------- left tree ---------- */
@@ -48,15 +48,27 @@
       '<span class="badge ' + (e.locked ? "ok" : "") + '" style="margin-top:8px">' + (e.locked ? "Signed &amp; locked" : "Draft") + "</span>" +
       '<button class="btn" style="margin-top:4px" data-a="exportPdf">Export PDF</button><button class="btn dark" style="margin-top:4px" data-a="toggleLock">' + (e.locked ? "Unlock" : "Sign &amp; lock") + "</button></div>";
   }
+  /* cards an entry can switch off (data is kept; they are just hidden and left out of the PDF) */
+  const CARDS = [["materials", "Materials"], ["procedure", "Procedure steps"], ["chip", "Chip loading map"]];
+  const cardsOf = e => (e.cards = Object.assign({ materials: true, procedure: true, chip: true }, e.cards));
+  LB.cardsOf = cardsOf;
+  const visSecs = e => { const c = cardsOf(e); return [0, c.materials ? 1 : -1, c.procedure || c.chip ? 2 : -1, 3, 4].filter(i => i >= 0); };
   function secBar(e) {
-    return '<div class="secs">' + SEC.map((s, i) => '<button class="pill' + (LB.ui.sec === i ? " on" : "") + '" data-a="setSec" data-n="' + i + '">' + (i + 1) + " " + s + (e.sn[i] ? " •" : "") + "</button>").join("") + "</div>";
+    return '<div class="secs">' + visSecs(e).map((i, k) => '<button class="pill' + (LB.ui.sec === i ? " on" : "") + '" data-a="setSec" data-n="' + i + '">' + (k + 1) + " " + SEC[i] + (e.sn[i] ? " •" : "") + "</button>").join("") + "</div>";
   }
   function overview(e) {
-    const P = "D.entries." + e.id, dis = e.locked ? "disabled" : "", x = LB.expOf(e);
+    const P = "D.entries." + e.id, dis = e.locked ? "disabled" : "", x = LB.expOf(e), cd = cardsOf(e);
     const loaded = e.map.cells.filter(c => c.on).length;
     return '<div class="card"><h3>Overview</h3><div class="lbl">Aim</div>' + T(3, e.aim, 'aria-label="Aim" data-b="' + P + '.aim" data-log="Edited aim" ' + dis) +
       '<div class="lbl">Hypothesis</div>' + T(2, e.hyp, 'aria-label="Hypothesis" data-b="' + P + '.hyp" data-log="Edited hypothesis" ' + dis) +
-      '<div class="kv"><span class="muted">Experiment</span><b>' + (x ? LB.expCode(x) + " · " + esc(x.name) : "–") + '</b><span class="muted">Protocol</span><b>' + (e.protocol ? esc(e.protocol.title) + " v" + e.protocol.ver : "none") + '</b><span class="muted">Linked materials</span><b>' + e.mats.length + ' items</b><span class="muted">Procedure</span><b>' + e.steps.filter(s => s.done).length + " of " + e.steps.length + ' steps done</b><span class="muted">Chip positions</span><b>' + loaded + " of " + e.map.cells.length + ' loaded</b><span class="muted">Files</span><b>' + e.files.length + " attached</b></div>" +
+      '<div class="kv"><span class="muted">Experiment</span><b>' + (x ? LB.expCode(x) + " · " + esc(x.name) : "–") + '</b><span class="muted">Protocol</span><b>' + (e.protocol ? esc(e.protocol.title) + " v" + e.protocol.ver : "none") + "</b>" +
+      (cd.materials ? '<span class="muted">Linked materials</span><b>' + e.mats.length + " items</b>" : "") +
+      (cd.procedure ? '<span class="muted">Procedure</span><b>' + e.steps.filter(s => s.done).length + " of " + e.steps.length + " steps done</b>" : "") +
+      (cd.chip ? '<span class="muted">Chip positions</span><b>' + loaded + " of " + e.map.cells.length + " loaded</b>" : "") +
+      '<span class="muted">Files</span><b>' + e.files.length + " attached</b></div>" +
+      '<div class="lbl">Cards in this entry</div><div class="row wrap" style="gap:16px">' +
+      CARDS.map(([k, l]) => '<label class="row sm" style="gap:6px"><input type="checkbox" data-b="' + P + ".cards." + k + '" data-render="1" data-log="Changed which cards are used" ' + (cd[k] ? "checked" : "") + " " + dis + ' style="accent-color:var(--acc);margin:0">' + l + "</label>").join("") +
+      '<span class="muted sm">Switch off what this experiment does not need, for example the chip map. Nothing is deleted.</span></div>' +
       '<div class="row"><button class="link sm" style="color:#b42318" data-a="delEntry">Delete this entry</button></div></div>';
   }
   function materials(e) {
@@ -85,12 +97,12 @@
       '<div class="mapset"><span class="mono">chamber · ' + loaded + "/" + cells.length + ' loaded</span><span class="grow"></span>Rows <input type="number" min="1" max="12" data-b="' + P + '.map.rows" data-t="num" data-act="mapResize" value="' + mp.rows + '" ' + dis + ">× columns <input type=\"number\" min=\"1\" max=\"12\" data-b=\"" + P + '.map.cols" data-t="num" data-act="mapResize" value="' + mp.cols + '" ' + dis + '><button class="link sm" data-a="mapFill" ' + dis + '>Fill all loaded…</button><button class="link sm" data-a="palette" data-i="all" ' + dis + '>Color all loaded…</button><button class="link sm" data-a="mapClear" ' + dis + ">Clear all</button></div>" +
       (LB.tmp.palOpen === "all" && !e.locked ? palette("all", "") : "") +
       (empties.length && loaded ? '<div class="warnbox">Empty positions: ' + empties.join(", ") + ". Note why in Results if this is a deviation.</div>" : "") +
-      (() => { const seen = {}; cells.forEach(c => { if (colOf(c)) seen[colOf(c) + "|" + (c.note || "") + "|" + (c.amt || "")] = { color: colOf(c), note: [c.note, c.amt].filter(Boolean).join(" · ") }; }); const l = Object.values(seen); return l.length ? '<div class="legend">' + l.map(x => '<span class="lg"><i style="background:' + x.color + '"></i>' + esc(x.note || "(no label)") + "</span>").join("") + "</div>" : ""; })() +
+      (() => { const seen = {}; cells.forEach(c => { if (colOf(c)) { const key = colOf(c) + "|" + (c.note || "") + "|" + (c.amt || ""); const o = seen[key] || (seen[key] = { color: colOf(c), note: [c.note, c.amt].filter(Boolean).join(" · "), on: false }); if (c.on) o.on = true; } }); const l = Object.values(seen); return l.length ? '<div class="legend">' + l.map(x => '<span class="lg" style="opacity:' + (x.on ? 1 : 0.45) + '"><i style="background:' + x.color + '"></i>' + esc(x.note || "(no label)") + "</span>").join("") + "</div>" : ""; })() +
       '<div class="lbl">What is in each position</div><div class="poslist">' +
       cells.map((c, i) => '<label class="posrow"><span class="pn' + (c.on ? " on" : "") + '">' + (i + 1) + '</span><input type="text" list="matlist" aria-label="Contents of position ' + (i + 1) + '" placeholder="' + (c.on ? "e.g. MCF-7 spheroid, 180 µm" : "empty") + '" data-b="' + P + ".map.cells." + i + '.note" data-log="Edited chip position notes" value="' + esc(c.note || "") + '" ' + dis + ' autocomplete="off"><input type="text" class="amt" aria-label="Amount in position ' + (i + 1) + '" placeholder="amount" title="Amount, e.g. 50 µL" data-b="' + P + ".map.cells." + i + '.amt" data-log="Edited chip position amounts" value="' + esc(c.amt || "") + '" ' + dis + ' autocomplete="off"><button class="swatch" data-a="palette" data-i="' + i + '" ' + dis + ' aria-label="Choose a color for position ' + (i + 1) + '" title="Color" style="' + (colOf(c) ? "background:" + colOf(c) + ";border-style:solid" : "") + '">' + (colOf(c) ? "" : "+") + '</button></label>' + (LB.tmp.palOpen === String(i) && !e.locked ? palette(i, colOf(c)) : "")).join("") + '</div>' +
       '<datalist id="matlist">' + e.mats.map(m => { const it = LB.D.items.find(x => x.id === m.id); return it ? '<option value="' + esc(it.name) + '">' : ""; }).join("") + '</datalist>' +
       '<div class="lbl">Notes on loading</div>' + T(2, mp.note || "", 'aria-label="Notes on loading" data-b="' + P + '.map.note" data-log="Edited loading notes" ' + dis) + "</div>";
-    return '<div class="two">' + steps + map + "</div>";
+    return '<div class="two">' + (cardsOf(e).procedure ? steps : "") + (cardsOf(e).chip ? map : "") + "</div>";
   }
   function results(e) {
     const P = "D.entries." + e.id, dis = e.locked ? "disabled" : "";
@@ -115,6 +127,7 @@
   function main() {
     const e = LB.cur();
     if (!e) return '<main class="main">' + emptyState() + "</main>";
+    if (!visSecs(e).includes(LB.ui.sec)) LB.ui.sec = 0;
     const body = [overview, materials, procedure, results, conclusion][LB.ui.sec](e);
     return '<main class="main">' + head(e) + secBar(e) + '<div class="mscroll" data-scroll="main">' + body + notesCard(e) + "</div></main>";
   }
@@ -230,11 +243,25 @@
     D.experiments = D.experiments.filter(z => z !== x); if (!D.entries[LB.ui.cur]) LB.ui.cur = ""; LB.save(); LB.render();
   };
 
-  /* ---------- PDF export (print dialog → Save as PDF) ---------- */
-  A.exportPdf = async () => {
-    const e = LB.cur(); if (!e) return; const D = LB.D, x = LB.expOf(e), proj = x && D.projects.find(p => p.id === x.projectId);
+  /* ---------- PDF export: choose what goes in, then print dialog → Save as PDF ---------- */
+  const EXPORT_ITEMS = [["aim", "Aim and hypothesis"], ["materials", "Materials"], ["procedure", "Procedure steps"], ["chip", "Chip loading map"], ["results", "Results (observations)"], ["files", "Attached images and files"], ["conclusion", "Conclusion and next steps"], ["notes", "My section notes"], ["comments", "Comments"], ["history", "Change history"]];
+  const exportAvail = (e, k) => (k === "materials" || k === "procedure" || k === "chip" ? cardsOf(e)[k] : true);
+  LB.exportModal = function () {
+    const e = LB.cur(); if (!e) return ""; const o = LB.ui.exportOpts;
+    return '<div class="backdrop" data-a="closeModal"><div class="modal"><h2>Export PDF</h2><div class="muted sm">Choose what to include. The entry details at the top are always included.</div><div class="expgrid">' +
+      EXPORT_ITEMS.map(([k, l]) => { const av = exportAvail(e, k); return '<label class="expitem' + (av ? "" : " off") + '"><input type="checkbox" data-b="ui.exportOpts.' + k + '" ' + (o[k] && av ? "checked" : "") + " " + (av ? "" : "disabled") + ' style="accent-color:var(--acc);margin:0">' + l + (av ? "" : ' <span class="muted sm">(switched off in this entry)</span>') + "</label>"; }).join("") + "</div>" +
+      '<div class="row"><button class="link sm" data-a="exportAll" data-v="1">Select all</button><button class="link sm" data-a="exportAll" data-v="0">Select none</button></div>' +
+      '<div class="muted sm">In the next window choose “Save as PDF” as the destination. Your choices are remembered.</div>' +
+      '<div class="row" style="justify-content:flex-end"><button class="btn" data-a="closeModal" data-force="1">Cancel</button><button class="btn pri" data-a="exportGo">Continue</button></div></div></div>';
+  };
+  A.exportPdf = () => { if (!LB.cur()) return; LB.tmp.pop = "export"; LB.render(); };
+  A.exportAll = el => { const e = LB.cur(); EXPORT_ITEMS.forEach(([k]) => { LB.ui.exportOpts[k] = el.dataset.v === "1" && exportAvail(e, k); }); LB.saveUI(); LB.render(); };
+  A.exportGo = async () => {
+    const e = LB.cur(); if (!e) return; LB.tmp.pop = ""; LB.render();
+    const D = LB.D, x = LB.expOf(e), proj = x && D.projects.find(p => p.id === x.projectId), cd = cardsOf(e), o = LB.ui.exportOpts;
+    const on = k => o[k] && exportAvail(e, k);
     const tx = (t, v, cls) => v && v.trim() ? "<section" + (cls ? ' class="' + cls + '"' : "") + "><h2>" + t + '</h2><div class="tx">' + esc(v) + "</div></section>" : "";
-    const note = (label, v) => (v && v.trim() ? '<div class="note"><b>' + label + ":</b> " + esc(v) + "</div>" : "");
+    const note = (label, v) => (o.notes && v && v.trim() ? '<div class="note"><b>' + label + ":</b> " + esc(v) + "</div>" : "");
     const signed = e.hist.slice().reverse().find(h => /^Signed/.test(h.msg));
     let h = '<div class="ph"><span class="pb">LabGorilla · Lab notebook</span><span class="stamp' + (e.locked ? " ok" : "") + '">' + (e.locked ? "Signed &amp; locked" + (signed ? " · " + U.stampStr(signed.at) : "") : "Draft") + "</span></div>";
     h += "<h1>" + esc(e.title) + "</h1>";
@@ -242,22 +269,40 @@
     const rows = [["Entry", esc(e.code)], ["Project / experiment", esc((proj ? proj.name + " / " : "") + (x ? LB.expCode(x) + " · " + x.name : "–"))], ["Experiment date", U.fmtLong(e.date)],
       ["Entered in the lab book", U.fmt(e.entered, true) + (gap > 0 ? " (" + gap + (gap === 1 ? " day" : " days") + " after the experiment)" : "")], ["Protocol", e.protocol ? esc(e.protocol.title) + " (v" + e.protocol.ver + ")" : "none"]];
     h += '<table class="pmeta">' + rows.map(r => "<tr><th>" + r[0] + "</th><td>" + r[1] + "</td></tr>").join("") + "</table>";
-    h += tx("Aim", e.aim) + tx("Hypothesis", e.hyp) + note("Notes", e.sn[0]);
+    if (on("aim")) h += tx("Aim", e.aim) + tx("Hypothesis", e.hyp);
+    h += note("Notes", e.sn[0]);
     const mats = e.mats.map(m => ({ m, it: D.items.find(i => i.id === m.id) })).filter(r => r.it);
-    if (mats.length) h += '<section class="long"><h2>Materials</h2><table class="t"><tr><th>Item</th><th>Type</th><th>Details</th><th>Used</th><th>Left after</th></tr>' + mats.map(({ m, it }) => "<tr><td>" + esc(it.name) + "</td><td>" + esc(it.kind) + "</td><td>" + esc(it.sub) + "</td><td>" + esc(m.used ? (m.used + " " + m.unit).trim() : "") + "</td><td>" + esc(m.left ? (m.left + " " + m.unit).trim() : "") + "</td></tr>").join("") + "</table></section>" + note("Notes", e.sn[1]);
-    if (e.steps.length) h += '<section class="long"><h2>Procedure</h2><table class="t"><tr><th style="width:22pt">#</th><th>Step</th><th class="ck">Done</th></tr>' + e.steps.map((s, i) => "<tr><td>" + (i + 1) + "</td><td>" + esc(s.t) + '</td><td class="ck">' + (s.done ? "☑" : "☐") + "</td></tr>").join("") + "</table></section>" + note("Notes", e.sn[2]);
+    if (on("materials") && mats.length) h += '<section class="long"><h2>Materials</h2><table class="t"><tr><th>Item</th><th>Type</th><th>Details</th><th>Used</th><th>Left after</th></tr>' + mats.map(({ m, it }) => "<tr><td>" + esc(it.name) + "</td><td>" + esc(it.kind) + "</td><td>" + esc(it.sub) + "</td><td>" + esc(m.used ? (m.used + " " + m.unit).trim() : "") + "</td><td>" + esc(m.left ? (m.left + " " + m.unit).trim() : "") + "</td></tr>").join("") + "</table></section>";
+    if (cd.materials) h += note("Notes (materials)", e.sn[1]);
+    if (on("procedure") && e.steps.length) h += '<section class="long"><h2>Procedure</h2><table class="t"><tr><th style="width:22pt">#</th><th>Step</th><th class="ck">Done</th></tr>' + e.steps.map((s, i) => "<tr><td>" + (i + 1) + "</td><td>" + esc(s.t) + '</td><td class="ck">' + (s.done ? "☑" : "☐") + "</td></tr>").join("") + "</table></section>";
     const mp = e.map, loaded = mp.cells.filter(c => c.on).length;
-    if (loaded) h += '<section><h2>Chip loading</h2><div class="chip" style="grid-template-columns:repeat(' + mp.cols + ',13pt)">' + mp.cells.map(c => '<i class="' + (c.on ? "on" : "") + '"' + (colOf(c) ? (c.on ? ' style="background:' + colOf(c) + '"' : ' style="border-color:' + colOf(c) + ";background:color-mix(in srgb," + colOf(c) + ' 22%,#fff)"') : "") + "></i>").join("") + '</div><div class="small">' + loaded + " of " + mp.cells.length + " positions loaded (" + mp.rows + " × " + mp.cols + "). Empty positions: " + (mp.cells.map((c, i) => (c.on ? 0 : i + 1)).filter(Boolean).join(", ") || "none") + ".</div>" + (mp.cells.some(c => c.note || c.amt) ? '<table class="t" style="margin-top:5pt"><tr><th style="width:34pt">Pos.</th><th>Contents</th><th style="width:70pt">Amount</th></tr>' + mp.cells.map((c, i) => (c.note || c.amt ? "<tr><td>" + (i + 1) + "</td><td>" + (colOf(c) ? '<i class="sw" style="background:' + colOf(c) + '"></i>' : "") + esc(c.note || "") + "</td><td>" + esc(c.amt || "") + "</td></tr>" : "")).join("") + "</table>" : "") + (mp.note ? '<div class="tx" style="margin-top:5pt">' + esc(mp.note) + "</div>" : "") + "</section>";
-    h += tx("Results", e.results, "long");
-    const figs = [], others = [];
-    for (const f of e.files) {
-      if (LB.isImage(f)) { const u = await LB.fileUrl(f); if (u) { figs.push('<figure><img src="' + u + '" alt="' + esc(f.name) + '"><figcaption>' + esc(f.name) + "</figcaption></figure>"); continue; } }
-      others.push(esc(f.name) + " (" + U.size(f.size || 0) + ")");
+    if (on("chip") && (loaded || mp.cells.some(c => c.note || c.amt))) {
+      const sz = Math.max(18, Math.min(38, Math.floor(430 / mp.cols) - 6));
+      const cell = (c, i) => {
+        const k = colOf(c);
+        const st = c.on ? (k ? "background:" + k + ";border-color:color-mix(in srgb," + k + " 55%,#000);color:#1b2030" : "") : (k ? "border-color:color-mix(in srgb," + k + " 35%,#b9bdca)" : "");
+        return '<i class="' + (c.on ? "on" : "off") + '" style="width:' + sz + "pt;height:" + sz + "pt;font-size:" + Math.round(sz * 0.36) + "pt;" + st + '">' + (i + 1) + "</i>";
+      };
+      h += '<section><h2>Chip loading</h2><div class="chip" style="grid-template-columns:repeat(' + mp.cols + "," + sz + 'pt)">' + mp.cells.map(cell).join("") + '</div><div class="small">' + loaded + " of " + mp.cells.length + " positions loaded (" + mp.rows + " × " + mp.cols + "). Empty positions (shown faded): " + (mp.cells.map((c, i) => (c.on ? 0 : i + 1)).filter(Boolean).join(", ") || "none") + ".</div>" +
+        (mp.cells.some(c => c.note || c.amt) ? '<table class="t" style="margin-top:5pt"><tr><th style="width:34pt">Pos.</th><th>Contents</th><th style="width:70pt">Amount</th></tr>' + mp.cells.map((c, i) => (c.note || c.amt ? "<tr><td>" + (i + 1) + "</td><td>" + (colOf(c) ? '<i class="sw" style="background:' + colOf(c) + '"></i>' : "") + esc(c.note || "") + "</td><td>" + esc(c.amt || "") + "</td></tr>" : "")).join("") + "</table>" : "") +
+        (mp.note ? '<div class="tx" style="margin-top:5pt">' + esc(mp.note) + "</div>" : "") + "</section>";
     }
-    if (figs.length || others.length) h += '<section class="long"><h2>Attached files</h2>' + (figs.length ? '<div class="imgs">' + figs.join("") + "</div>" : "") + (others.length ? '<div class="small" style="margin-top:6pt">Other files: ' + others.join(", ") + "</div>" : "") + "</section>";
-    h += note("Notes", e.sn[3]) + tx("Conclusion &amp; next steps", e.concl) + note("Notes", e.sn[4]);
-    if (e.comments.length) h += '<section class="long rec"><h2>Comments</h2>' + e.comments.map(c => "<div><b>" + esc(c.who) + '</b> <span class="small">' + U.stampStr(c.at) + "</span><br>" + esc(c.text) + "</div>").join("") + "</section>";
-    h += '<section class="long rec"><h2>Change history</h2>' + e.hist.slice().reverse().map(z => '<div class="small">' + U.stampStr(z.at) + " · " + esc(z.msg) + "</div>").join("") + '</section><div class="small">Printed ' + U.fmt(U.today(), true) + " from LabGorilla.</div>";
+    if (cd.procedure || cd.chip) h += note("Notes (procedure)", e.sn[2]);
+    if (on("results")) h += tx("Results", e.results, "long");
+    if (on("files")) {
+      const figs = [], others = [];
+      for (const f of e.files) {
+        if (LB.isImage(f)) { const u = await LB.fileUrl(f); if (u) { figs.push('<figure><img src="' + u + '" alt="' + esc(f.name) + '"><figcaption>' + esc(f.name) + "</figcaption></figure>"); continue; } }
+        others.push(esc(f.name) + " (" + U.size(f.size || 0) + ")");
+      }
+      if (figs.length || others.length) h += '<section class="long"><h2>Attached files</h2>' + (figs.length ? '<div class="imgs">' + figs.join("") + "</div>" : "") + (others.length ? '<div class="small" style="margin-top:6pt">Other files: ' + others.join(", ") + "</div>" : "") + "</section>";
+    }
+    h += note("Notes (results)", e.sn[3]);
+    if (on("conclusion")) h += tx("Conclusion &amp; next steps", e.concl);
+    h += note("Notes (conclusion)", e.sn[4]);
+    if (on("comments") && e.comments.length) h += '<section class="long rec"><h2>Comments</h2>' + e.comments.map(c => "<div><b>" + esc(c.who) + '</b> <span class="small">' + U.stampStr(c.at) + "</span><br>" + esc(c.text) + "</div>").join("") + "</section>";
+    if (on("history")) h += '<section class="long rec"><h2>Change history</h2>' + e.hist.slice().reverse().map(z => '<div class="small">' + U.stampStr(z.at) + " · " + esc(z.msg) + "</div>").join("") + "</section>";
+    h += '<div class="small">Printed ' + U.fmt(U.today(), true) + " from LabGorilla.</div>";
     const p = document.getElementById("print");
     // spacer rows in thead/tfoot repeat on every printed page, giving real top/bottom margins whatever the print dialog's margin setting is
     p.innerHTML = '<table class="pg"><thead><tr><td></td></tr></thead><tfoot><tr><td>' + esc(e.code) + " · " + esc(e.title) + " · LabGorilla</td></tr></tfoot><tbody><tr><td>" + h + "</td></tr></tbody></table>";

@@ -115,8 +115,8 @@ input:disabled,textarea:disabled,select:disabled{background:#f5f6fa!important;co
 .chipmap .port.out i{background:var(--ink)}
 .chipmap .pipe{height:8px;width:16px;background:var(--acc-m);border-radius:4px}
 .chamber{flex-grow:1;display:grid;gap:10px;background:#fff;border:2px solid var(--acc-m);border-radius:12px;padding:14px;justify-items:center}
-.well{width:42px;height:42px;border-radius:50%;font:12px var(--mono);color:var(--acc-d);background:#fff;border:2px dashed var(--acc-d)}
-.well.on{background:var(--acc-m);border-style:solid}
+.well{width:42px;height:42px;border-radius:50%;font:12px var(--mono);color:#9aa0b3;background:#f4f5f8;border:2px dashed #b9bdca}
+.well.on{background:var(--acc-m);border:2px solid var(--acc-d);color:var(--acc-d)}
 .mapset{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--soft)}
 .mapset input[type=number]{width:56px;border:1px solid #d6d9e6;border-radius:6px;padding:4px 6px}
 
@@ -247,8 +247,8 @@ input:disabled,textarea:disabled,select:disabled{background:#f5f6fa!important;co
   #print table.t tr:nth-child(even) td{background:#f8f9fc}
   #print td.ck{font-size:11pt;line-height:1;width:34pt;text-align:center}
   #print .chip{display:inline-grid;gap:4pt;padding:8pt;border:1pt solid var(--acc-m);border-radius:8pt;margin:3pt 0 5pt}
-  #print .chip i{display:block;width:13pt;height:13pt;border-radius:50%;border:1.25pt dashed var(--acc-d);box-sizing:border-box}
-  #print .chip i.on{background:var(--acc-m);border-style:solid}
+  #print .chip i{display:flex;align-items:center;justify-content:center;border-radius:50%;box-sizing:border-box;font-style:normal;font-family:var(--mono);border:1.25pt dashed #b9bdca;background:#f4f5f8;color:#9aa0b3}
+  #print .chip i.on{background:var(--acc-m);border:1.25pt solid var(--acc-d);color:var(--acc-d)}
   #print .imgs{display:grid;grid-template-columns:1fr 1fr;gap:8pt;margin-top:6pt}
   #print figure{margin:0;break-inside:avoid;border:.5pt solid #c9cde0;border-radius:4pt;padding:4pt}
   #print figure img{width:100%;max-height:200pt;object-fit:contain;display:block}
@@ -286,3 +286,7 @@ input:disabled,textarea:disabled,select:disabled{background:#f5f6fa!important;co
 
 .posrow .amt{flex:0 0 88px;width:88px}
 .mapset{flex-wrap:wrap;row-gap:6px;white-space:nowrap}
+
+.expgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+.modal label.expitem{display:flex;flex-direction:row;gap:8px;align-items:center;font-size:13px;font-weight:500;color:var(--ink)}
+.modal label.expitem.off{color:var(--mute)}
