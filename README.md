@@ -26,7 +26,7 @@ Open http://localhost:8123 in Chrome/Edge/Brave (the install/offline parts need 
 | `sw.js`, `manifest.webmanifest`, `icons/` | offline + install |
 
 ## Links from other apps
-`<address>#/entry/<entry code or id>` opens that entry (Hedgehog uses this).
+`<address>#/entry/<entry code or id>` opens that entry, `<address>#/calendar/YYYY-MM-DD` opens the calendar on that day (Hedgehog uses these).
 
 ## `.lbk` file format
 JSON: `{ app: "labbook", version: 1, saved, settings, data }` where `data` has `projects, experiments, entries, protocols, items, types, events`.

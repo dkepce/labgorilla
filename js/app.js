@@ -197,6 +197,8 @@
 
   /* ---------- hash links: #/entry/<id or code> (used by Hedgehog) ---------- */
   LB.route = function () {
+    const c = location.hash.match(/^#\/calendar\/(\d{4}-\d{2}-\d{2})$/);
+    if (c) { const d = U.parse(c[1]); LB.ui.sel = c[1]; LB.ui.calY = d.getFullYear(); LB.ui.calM = d.getMonth(); LB.go("calendar"); return; }
     const m = location.hash.match(/^#\/entry\/(.+)$/); if (!m) return;
     const key = decodeURIComponent(m[1]);
     const e = LB.D.entries[key] || Object.values(LB.D.entries).find(x => x.code === key);
