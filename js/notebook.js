@@ -129,7 +129,7 @@
     if (!e) return '<main class="main">' + emptyState() + "</main>";
     if (!visSecs(e).includes(LB.ui.sec)) LB.ui.sec = 0;
     const body = [overview, materials, procedure, results, conclusion][LB.ui.sec](e);
-    return '<main class="main">' + head(e) + secBar(e) + '<div class="mscroll" data-scroll="main">' + body + notesCard(e) + "</div></main>";
+    return '<main class="main">' + head(e) + secBar(e) + '<div class="mscroll" data-scroll="main">' + body + (LB.ui.sec === 0 ? LB.refsCard("entry", e, e.id) : "") + notesCard(e) + "</div></main>";
   }
 
   /* ---------- right panel ---------- */
@@ -244,7 +244,7 @@
   };
 
   /* ---------- PDF export: choose what goes in, then print dialog → Save as PDF ---------- */
-  const EXPORT_ITEMS = [["aim", "Aim and hypothesis"], ["materials", "Materials"], ["procedure", "Procedure steps"], ["chip", "Chip loading map"], ["results", "Results (observations)"], ["files", "Attached images and files"], ["conclusion", "Conclusion and next steps"], ["notes", "My section notes"], ["comments", "Comments"], ["history", "Change history"]];
+  const EXPORT_ITEMS = [["aim", "Aim and hypothesis"], ["materials", "Materials"], ["procedure", "Procedure steps"], ["chip", "Chip loading map"], ["results", "Results (observations)"], ["files", "Attached images and files"], ["conclusion", "Conclusion and next steps"], ["notes", "My section notes"], ["refs", "References"], ["comments", "Comments"], ["history", "Change history"]];
   const exportAvail = (e, k) => (k === "materials" || k === "procedure" || k === "chip" ? cardsOf(e)[k] : true);
   LB.exportModal = function () {
     const e = LB.cur(); if (!e) return ""; const o = LB.ui.exportOpts;
@@ -300,6 +300,7 @@
     h += note("Notes (results)", e.sn[3]);
     if (on("conclusion")) h += tx("Conclusion &amp; next steps", e.concl);
     h += note("Notes (conclusion)", e.sn[4]);
+    if (on("refs")) h += LB.refsPrint(e);
     if (on("comments") && e.comments.length) h += '<section class="long rec"><h2>Comments</h2>' + e.comments.map(c => "<div><b>" + esc(c.who) + '</b> <span class="small">' + U.stampStr(c.at) + "</span><br>" + esc(c.text) + "</div>").join("") + "</section>";
     if (on("history")) h += '<section class="long rec"><h2>Change history</h2>' + e.hist.slice().reverse().map(z => '<div class="small">' + U.stampStr(z.at) + " · " + esc(z.msg) + "</div>").join("") + "</section>";
     h += '<div class="small">Printed ' + U.fmt(U.today(), true) + " from LabGorilla.</div>";

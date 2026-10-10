@@ -4,7 +4,7 @@
 
   /* ---------- defaults & loading ---------- */
   const DEFAULT_S = { theme: "indigo" };
-  const DEFAULT_UI = { view: "notebook", cur: "", sec: 0, tab: 0, calMode: "month", sel: "", openExp: {}, openProj: {}, exportOpts: { aim: true, materials: true, procedure: true, chip: true, results: true, files: true, conclusion: true, notes: true, comments: true, history: true } };
+  const DEFAULT_UI = { view: "notebook", cur: "", sec: 0, tab: 0, calMode: "month", sel: "", openExp: {}, openProj: {}, exportOpts: { aim: true, materials: true, procedure: true, chip: true, results: true, files: true, conclusion: true, notes: true, comments: true, history: true, refs: true } };
   const TYPES = ["cell line", "reagent", "medium", "chips", "drug", "antibody"];
   const SECTIONS = ["Overview", "Materials", "Procedure", "Results", "Conclusion"];
   LB.SECTIONS = SECTIONS;
@@ -20,14 +20,14 @@
   LB.fixData = function () {
     const D = LB.D;
     D.projects = D.projects || []; D.experiments = D.experiments || []; D.entries = D.entries || {};
-    D.protocols = D.protocols || {}; D.items = D.items || []; D.events = D.events || [];
+    D.protocols = D.protocols || {}; D.items = D.items || []; D.events = D.events || []; D.refs = D.refs || [];
     D.types = D.types && D.types.length ? D.types : TYPES.slice(); D.expSeq = D.expSeq || D.experiments.length;
     Object.values(D.entries).forEach(e => {
       e.steps = e.steps || []; e.mats = e.mats || []; e.files = e.files || []; e.comments = e.comments || []; e.hist = e.hist || [];
-      e.sn = e.sn || ["", "", "", "", ""]; e.map = e.map || LB.newMap(); e.entered = e.entered || e.date;
+      e.sn = e.sn || ["", "", "", "", ""]; e.refs = e.refs || []; e.map = e.map || LB.newMap(); e.entered = e.entered || e.date;
       ["aim", "hyp", "results", "concl"].forEach(k => { e[k] = e[k] || ""; });
     });
-    Object.values(D.protocols).forEach(p => { p.steps = p.steps || []; p.mats = p.mats || []; p.history = p.history || []; p.ver = p.ver || 1; p.desc = p.desc || ""; });
+    Object.values(D.protocols).forEach(p => { p.steps = p.steps || []; p.refs = p.refs || []; p.mats = p.mats || []; p.history = p.history || []; p.ver = p.ver || 1; p.desc = p.desc || ""; });
     D.items.forEach(i => { i.firms = i.firms || []; i.docs = i.docs || []; i.stock = i.stock || ""; i.sub = i.sub || ""; });
   };
   LB.newMap = (rows = 2, cols = 4) => ({ rows, cols, cells: Array.from({ length: rows * cols }, () => ({ on: false, note: "" })) });

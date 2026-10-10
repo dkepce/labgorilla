@@ -135,7 +135,7 @@
   }
   function overlays() {
     const p = LB.tmp.pop;
-    return p === "theme" ? themePop() : p === "file" ? filePop() : p === "new" ? newEntryModal() : p === "export" ? LB.exportModal() : "";
+    return p === "theme" ? themePop() : p === "file" ? filePop() : p === "new" ? newEntryModal() : p === "export" ? LB.exportModal() : p === "zotero" ? LB.zoteroModal() : "";
   }
 
   /* ---------- shared actions ---------- */
@@ -163,7 +163,7 @@
   /* ---------- event delegation ---------- */
   document.addEventListener("click", ev => {
     const el = ev.target.closest("[data-a]");
-    if (LB.tmp.pop && LB.tmp.pop !== "new" && LB.tmp.pop !== "export" && !ev.target.closest(".pop") && !(el && el.dataset.a === "pop")) { LB.tmp.pop = ""; LB.render(); }
+    if (LB.tmp.pop && LB.tmp.pop !== "new" && LB.tmp.pop !== "export" && LB.tmp.pop !== "zotero" && !ev.target.closest(".pop") && !(el && el.dataset.a === "pop")) { LB.tmp.pop = ""; LB.render(); }
     if (LB.tmp.gq && !ev.target.closest(".tsearch")) { LB.tmp.gq = ""; LB.render(); }
     if (!el) return;
     const fn = A[el.dataset.a]; if (fn) fn(el, ev);
