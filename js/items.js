@@ -1,4 +1,4 @@
-/* Labbook — pieces shared by Notebook and Inventory: attachments, material details, new-material form. */
+/* LabGorilla — pieces shared by Notebook and Inventory: attachments, material details, new-material form. */
 (function (LB) {
   const U = LB.U, esc = U.esc, A = LB.actions;
 

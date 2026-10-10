@@ -1,4 +1,4 @@
-/* Labbook — Notebook view: tree, entry sections, right panel. */
+/* LabGorilla — Notebook view: tree, entry sections, right panel. */
 (function (LB) {
   const U = LB.U, esc = U.esc, A = LB.actions;
   const SEC = LB.SECTIONS;
@@ -100,7 +100,7 @@
   }
   function emptyState() {
     return '<div class="empty"><div class="h" style="font-size:20px">Welcome to your lab book</div><div>Create your first entry to get started, or look around with example data.</div><div class="row"><button class="btn pri" data-a="newEntry">+ New entry</button><button class="btn" data-a="demo">Load example data</button></div>' +
-      '<div class="muted sm" style="max-width:420px">Tip: open the “Saved in this browser” button at the top to choose a folder. From then on every change is also saved into a Labbook.lbk file.</div></div>';
+      '<div class="muted sm" style="max-width:420px">Tip: open the “Saved in this browser” button at the top to choose a folder. From then on every change is also saved into a LabGorilla.lbk file.</div></div>';
   }
   function main() {
     const e = LB.cur();

@@ -1,4 +1,4 @@
-/* Labbook — app shell: render loop, event handling, top bar, dialogs, colors. */
+/* LabGorilla — app shell: render loop, event handling, top bar, dialogs, colors. */
 (function (LB) {
   const U = LB.U, esc = U.esc;
   const $ = s => document.querySelector(s);
@@ -67,7 +67,7 @@
   const LOGO = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/></svg>';
   function fileChip() {
     const F = LB.file;
-    const m = { ok: ["✓ Saved to Labbook.lbk", ""], saving: ["Saving…", ""], needs: ["⚠ Reconnect file", "warn"], error: ["⚠ File problem", "warn"], none: ["Saved in this browser", ""], local: ["Saved in this browser", ""] };
+    const m = { ok: ["✓ Saved to LabGorilla.lbk", ""], saving: ["Saving…", ""], needs: ["⚠ Reconnect file", "warn"], error: ["⚠ File problem", "warn"], none: ["Saved in this browser", ""], local: ["Saved in this browser", ""] };
     const x = m[F.state] || m.none;
     return '<button class="tbtn ' + x[1] + '" data-a="pop" data-p="file" title="Your lab book file">' + x[0] + "</button>";
   }
@@ -83,7 +83,7 @@
   }
   function topbar() {
     const NAV = [["notebook", "Notebook"], ["protocols", "Protocols"], ["inventory", "Inventory"], ["calendar", "Calendar"]];
-    return '<header class="top"><div class="brand">' + LOGO + 'Labbook</div><nav class="nav">' +
+    return '<header class="top"><div class="brand">' + LOGO + 'LabGorilla</div><nav class="nav">' +
       NAV.map(([k, l]) => '<button class="' + (LB.ui.view === k ? "on" : "") + '" data-a="nav" data-v="' + k + '">' + l + "</button>").join("") + '</nav><span class="grow"></span>' +
       '<div class="tsearch"><input type="text" placeholder="Search everything…" aria-label="Search everything" autocomplete="off" data-b="tmp.gq" data-rin="1" value="' + esc(LB.tmp.gq || "") + '">' + globalResults() + "</div>" +
       fileChip() + '<button class="tbtn" data-a="pop" data-p="theme" title="Colors"><span style="width:10px;height:10px;border-radius:50%;background:var(--acc);display:inline-block"></span>Colors</button></header>';
@@ -98,11 +98,11 @@
   function filePop() {
     const F = LB.file;
     const status = {
-      ok: '<div class="okbox">✓ Every change is saved automatically into ' + esc(F.name) + "/Labbook.lbk</div>",
+      ok: '<div class="okbox">✓ Every change is saved automatically into ' + esc(F.name) + "/LabGorilla.lbk</div>",
       saving: '<div class="okbox">Saving…</div>',
       needs: '<div class="warnbox2">The browser needs your permission again to save into <b>' + esc(F.name) + "</b>. Click Reconnect.</div>",
       error: '<div class="warnbox2">The file could not be written' + (F.msg ? ": " + esc(F.msg) : "") + ".</div>",
-      none: '<div class="warnbox2">Right now everything is saved only inside this browser. Choose a folder so it is also saved into a Labbook.lbk file that you can back up or keep in iCloud Drive.</div>',
+      none: '<div class="warnbox2">Right now everything is saved only inside this browser. Choose a folder so it is also saved into a LabGorilla.lbk file that you can back up or keep in iCloud Drive.</div>',
       local: '<div class="warnbox2">This browser cannot save into a file by itself. Everything is saved in the browser; use Backup now and then. (In Brave: enable “File System Access API” in brave://flags.)</div>'
     }[F.state] || "";
     const btns = [];
@@ -111,7 +111,7 @@
     if (F.ok && F.dir) btns.push('<button class="btn" data-a="fileChoose">Change folder…</button>', '<button class="btn" data-a="fileUnlink">Stop saving to file</button>');
     btns.push('<button class="btn" data-a="fileBackup">⬇ Backup</button>', '<label class="btn" style="cursor:pointer">⬆ Restore<input type="file" accept=".lbk,.json,application/json" data-file="fileRestore" hidden></label>');
     return '<div class="pop"><div class="h">Your lab book file</div>' + status +
-      '<div class="muted" style="font-size:13px;line-height:1.55">Text, tables and settings live in <b>Labbook.lbk</b>. Images and PDFs go into a folder called “Labbook files” next to it. Hedgehog can read the same file to show your experiments in the planner.</div>' +
+      '<div class="muted" style="font-size:13px;line-height:1.55">Text, tables and settings live in <b>LabGorilla.lbk</b>. Images and PDFs go into a folder called “LabGorilla files” next to it. Hedgehog can read the same file to show your experiments in the planner.</div>' +
       '<div class="row wrap">' + btns.join("") + "</div>" +
       '<div class="muted sm">A backup is a copy as of now. Restore replaces everything on screen with the backup file.</div>' +
       '<hr style="border:0;border-top:1px solid var(--line2);width:100%"><div class="row wrap"><button class="btn" data-a="demo">Load example data</button><span class="muted sm">Fills the lab book with sample experiments, protocols and inventory.</span></div></div>';

@@ -1,4 +1,4 @@
-/* Labbook — Inventory view: all materials, types, suppliers, order list. */
+/* LabGorilla — Inventory view: all materials, types, suppliers, order list. */
 (function (LB) {
   const U = LB.U, esc = U.esc, A = LB.actions;
 

@@ -1,4 +1,4 @@
-# Labbook
+# LabGorilla
 
 A lab notebook for experiments, protocols, inventory and planning. Plain HTML/CSS/JS, **no build step** — these files are the app. Installable (PWA), works offline.
 
@@ -10,7 +10,7 @@ Open http://localhost:8123 in Chrome/Edge/Brave (the install/offline parts need 
 
 ## Where the data lives
 * Always in the browser (localStorage + IndexedDB for attachments).
-* Optionally in a folder she picks (top bar → "Saved in this browser" → Choose folder): every change is written to `Labbook.lbk`, attachments go to `Labbook files/` next to it. Needs the File System Access API (Chrome/Edge; in Brave enable it in `brave://flags`).
+* Optionally in a folder she picks (top bar → "Saved in this browser" → Choose folder): every change is written to `LabGorilla.lbk`, attachments go to `LabGorilla files/` next to it. Needs the File System Access API (Chrome/Edge; in Brave enable it in `brave://flags`).
 * Backup / Restore buttons in the same dialog; "Load example data" fills in a demo.
 
 ## Files
@@ -29,4 +29,4 @@ Open http://localhost:8123 in Chrome/Edge/Brave (the install/offline parts need 
 `<address>#/entry/<entry code or id>` opens that entry, `<address>#/calendar/YYYY-MM-DD` opens the calendar on that day (Hedgehog uses these).
 
 ## `.lbk` file format
-JSON: `{ app: "labbook", version: 1, saved, settings, data }` where `data` has `projects, experiments, entries, protocols, items, types, events`.
+JSON: `{ app: "labgorilla", version: 1, saved, settings, data }` where `data` has `projects, experiments, entries, protocols, items, types, events`.

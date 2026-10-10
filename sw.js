@@ -1,4 +1,4 @@
-const CACHE = "labbook-v1";
+const CACHE = "labgorilla-v1";
 const SHELL = ["./", "./index.html", "./style.css", "./manifest.webmanifest",
   "./js/util.js", "./js/store.js", "./js/app.js", "./js/items.js", "./js/notebook.js", "./js/protocols.js",
   "./js/inventory.js", "./js/calendar.js", "./js/seed.js", "./js/init.js",

@@ -1,6 +1,6 @@
 {
-  "name": "Labbook",
-  "short_name": "Labbook",
+  "name": "LabGorilla",
+  "short_name": "LabGorilla",
   "description": "A lab notebook for experiments, protocols, inventory and planning.",
   "start_url": "./",
   "scope": "./",
@@ -12,6 +12,6 @@
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ],
   "file_handlers": [
-    { "action": "./index.html", "accept": { "application/x-labbook": [".lbk"] } }
+    { "action": "./index.html", "accept": { "application/x-labgorilla": [".lbk"] } }
   ]
 }

@@ -1,4 +1,4 @@
-/* Labbook — Calendar view: month grid, optional pastel week view, events. */
+/* LabGorilla — Calendar view: month grid, optional pastel week view, events. */
 (function (LB) {
   const U = LB.U, esc = U.esc, A = LB.actions;
   const KINDS = { imaging: "Imaging", order: "Order", passage: "Passage", other: "Other" };

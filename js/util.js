@@ -1,4 +1,4 @@
-/* Labbook — small helpers shared by every file. */
+/* LabGorilla — small helpers shared by every file. */
 window.LB = window.LB || {};
 (function (LB) {
   const U = (LB.U = {});

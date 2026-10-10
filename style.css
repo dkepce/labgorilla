@@ -1,4 +1,4 @@
-/* Labbook — styles. Colors come from the variables below; the theme picker swaps them. */
+/* LabGorilla — styles. Colors come from the variables below; the theme picker swaps them. */
 :root{
   --acc:#4f46e5;--acc-d:#3730a3;--acc-s:#eceefe;--acc-m:#a5b4fc;--bar:#1b2030;--bar-2:#2b3250;
   --ink:#1b2030;--soft:#414760;--mute:#7b8197;--line:#dde0e8;--line2:#eceef4;--bg:#eef0f4;--card:#fff;

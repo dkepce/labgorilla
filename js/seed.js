@@ -1,4 +1,4 @@
-/* Labbook — example data ("Load example data"). Dates are relative to today. */
+/* LabGorilla — example data ("Load example data"). Dates are relative to today. */
 (function (LB) {
   const U = LB.U;
   LB.seedDemo = function () {

@@ -1,4 +1,4 @@
-/* Labbook — data, saving (browser + Labbook.lbk file) and attachments. Plain JS, no build step. */
+/* LabGorilla — data, saving (browser + LabGorilla.lbk file) and attachments. Plain JS, no build step. */
 (function (LB) {
   const U = LB.U;
 
@@ -35,7 +35,7 @@
   /* ---------- saving ---------- */
   let savedAt = 0; try { savedAt = +localStorage.getItem("labbook.savedAt") || 0; } catch (e) { }
   let lastSer = JSON.stringify({ S: LB.S, D: LB.D });
-  LB.payload = () => ({ app: "labbook", version: 1, saved: new Date(savedAt || Date.now()).toISOString(), settings: LB.S, data: LB.D });
+  LB.payload = () => ({ app: "labgorilla", version: 1, saved: new Date(savedAt || Date.now()).toISOString(), settings: LB.S, data: LB.D });
   function persistLocal() {
     try {
       localStorage.setItem("labbook.settings", JSON.stringify(LB.S));
@@ -70,7 +70,7 @@
   async function idbSet(store, k, v) { try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction(store, "readwrite"); t.objectStore(store).put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); }); return true; } catch (e) { return false; } }
   async function idbDel(store, k) { try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction(store, "readwrite"); t.objectStore(store).delete(k); t.oncomplete = res; t.onerror = () => rej(t.error); }); } catch (e) { } }
 
-  /* ---------- Labbook.lbk in a folder the user picks (File System Access API) ---------- */
+  /* ---------- LabGorilla.lbk in a folder the user picks (File System Access API) ---------- */
   const FS_OK = !!window.showDirectoryPicker;
   const F = (LB.file = { ok: FS_OK, dir: null, filesDir: null, state: FS_OK ? "none" : "local", name: "", timer: null, lastWrite: 0, msg: "" });
   LB.onFileState = () => { };
@@ -88,17 +88,17 @@
     try {
       if (!(await perm(F.dir, ask))) { setState("needs"); return false; }
       setState("saving");
-      const fh = await F.dir.getFileHandle("Labbook.lbk", { create: true });
+      const fh = await F.dir.getFileHandle("LabGorilla.lbk", { create: true });
       const w = await fh.createWritable(); await w.write(JSON.stringify(LB.payload(), null, 1)); await w.close();
       F.lastWrite = Date.now(); setState("ok"); return true;
     } catch (e) { F.msg = e.message; setState("error"); return false; }
   }
   LB.writeFileNow = () => writeFile(true);
   async function readLbk(dir) {
-    const fh = await dir.getFileHandle("Labbook.lbk");
+    const fh = await dir.getFileHandle("LabGorilla.lbk");
     return JSON.parse(await (await fh.getFile()).text());
   }
-  function checkPayload(j) { if (!j || j.app !== "labbook" || !j.data) throw new Error("not a Labbook file"); return j; }
+  function checkPayload(j) { if (!j || (j.app !== "labgorilla" && j.app !== "labbook") || !j.data) throw new Error("not a LabGorilla file"); return j; }
   LB.applyPayload = function (j) {
     checkPayload(j);
     LB.S = Object.assign({}, DEFAULT_S, j.settings); LB.D = j.data; LB.fixData();
@@ -107,7 +107,7 @@
     if (!LB.D.entries[LB.ui.cur]) LB.ui.cur = "";
     LB.render();
   };
-  async function openFilesDir() { try { F.filesDir = await F.dir.getDirectoryHandle("Labbook files", { create: true }); } catch (e) { F.filesDir = null; } }
+  async function openFilesDir() { try { F.filesDir = await F.dir.getDirectoryHandle("LabGorilla files", { create: true }); } catch (e) { F.filesDir = null; } }
   async function migrateBlobs() {
     if (!F.filesDir) return;
     for (const ref of LB.allRefs()) {
@@ -132,11 +132,11 @@
       const dir = await showDirectoryPicker({ id: "labbook", mode: "readwrite" });
       let existing = null;
       try { existing = checkPayload(await readLbk(dir)); } catch (e) { }
-      if (existing && LB.hasContent() && !confirm("This folder already contains a Labbook.lbk.\n\nOpen it? What is on screen now will be replaced.\n(Press Cancel to keep what you have and choose another folder.)")) return;
+      if (existing && LB.hasContent() && !confirm("This folder already contains a LabGorilla.lbk.\n\nOpen it? What is on screen now will be replaced.\n(Press Cancel to keep what you have and choose another folder.)")) return;
       F.dir = dir; F.name = dir.name; await idbSet("kv", "dir", dir);
       if (existing) LB.applyPayload(existing); else await writeFile(true);
       await openFilesDir(); await migrateBlobs(); setState("ok");
-      LB.toast("Done: your lab book now saves itself into " + dir.name + "/Labbook.lbk");
+      LB.toast("Done: your lab book now saves itself into " + dir.name + "/LabGorilla.lbk");
     } catch (e) { if (e.name !== "AbortError") LB.toast("That did not work: " + e.message); }
   };
   LB.reconnect = async function () {
@@ -157,22 +157,22 @@
   /* pick up changes written elsewhere when she comes back to the window */
   document.addEventListener("visibilitychange", async () => {
     if (document.hidden || !F.dir || F.state === "needs") return;
-    try { if (await perm(F.dir, false)) { const fh = await F.dir.getFileHandle("Labbook.lbk"); const f = await fh.getFile(); if (f.lastModified > F.lastWrite + 2000 && (JSON.parse(await f.text()).saved || "") > new Date(savedAt + 1000).toISOString()) await syncFromFile(); } } catch (e) { }
+    try { if (await perm(F.dir, false)) { const fh = await F.dir.getFileHandle("LabGorilla.lbk"); const f = await fh.getFile(); if (f.lastModified > F.lastWrite + 2000 && (JSON.parse(await f.text()).saved || "") > new Date(savedAt + 1000).toISOString()) await syncFromFile(); } } catch (e) { }
   });
   window.addEventListener("beforeunload", () => { if (F.timer) writeFile(false); });
 
   LB.downloadBackup = function () {
-    const blob = new Blob([JSON.stringify(LB.payload(), null, 1)], { type: "application/x-labbook" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "Labbook-" + U.today() + ".lbk";
+    const blob = new Blob([JSON.stringify(LB.payload(), null, 1)], { type: "application/x-labgorilla" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "LabGorilla-" + U.today() + ".lbk";
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-    LB.toast("Backup saved: Labbook-" + U.today() + ".lbk (see your Downloads folder).");
+    LB.toast("Backup saved: LabGorilla-" + U.today() + ".lbk (see your Downloads folder).");
   };
   LB.restoreFrom = async function (file) {
     try {
       const j = checkPayload(JSON.parse(await file.text()));
       if (!confirm("Replace everything in the lab book with the backup from " + (j.saved || "").slice(0, 10) + "?")) return;
       LB.applyPayload(j); LB.save(); if (F.dir) await writeFile(false); LB.toast("Backup restored.");
-    } catch (e) { LB.toast("That file is not a Labbook backup."); }
+    } catch (e) { LB.toast("That file is not a LabGorilla backup."); }
   };
 
   /* ---------- attachments (images, PDFs, data files) ---------- */

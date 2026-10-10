@@ -1,4 +1,4 @@
-/* Labbook — Protocols view. */
+/* LabGorilla — Protocols view. */
 (function (LB) {
   const U = LB.U, esc = U.esc, A = LB.actions;
 

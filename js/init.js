@@ -1,4 +1,4 @@
-/* Labbook — start-up. */
+/* LabGorilla — start-up. */
 (function (LB) {
   LB.fixData();
   LB.D.experiments.forEach((x, i) => { x.num = x.num || i + 1; });
