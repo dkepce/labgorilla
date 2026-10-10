@@ -234,7 +234,9 @@
     h += note("Notes", e.sn[3]) + tx("Conclusion &amp; next steps", e.concl) + note("Notes", e.sn[4]);
     if (e.comments.length) h += '<section class="long rec"><h2>Comments</h2>' + e.comments.map(c => "<div><b>" + esc(c.who) + '</b> <span class="small">' + U.stampStr(c.at) + "</span><br>" + esc(c.text) + "</div>").join("") + "</section>";
     h += '<section class="long rec"><h2>Change history</h2>' + e.hist.slice().reverse().map(z => '<div class="small">' + U.stampStr(z.at) + " · " + esc(z.msg) + "</div>").join("") + '</section><div class="small">Printed ' + U.fmt(U.today(), true) + " from LabGorilla.</div>";
-    const p = document.getElementById("print"); p.innerHTML = h;
+    const p = document.getElementById("print");
+    // spacer rows in thead/tfoot repeat on every printed page, giving real top/bottom margins whatever the print dialog's margin setting is
+    p.innerHTML = '<table class="pg"><thead><tr><td></td></tr></thead><tfoot><tr><td>' + esc(e.code) + " · " + esc(e.title) + " · LabGorilla</td></tr></tfoot><tbody><tr><td>" + h + "</td></tr></tbody></table>";
     await Promise.race([Promise.all(Array.from(p.querySelectorAll("img")).map(i => (i.decode ? i.decode().catch(() => { }) : 0))), new Promise(r => setTimeout(r, 4000))]);
     const old = document.title; document.title = e.code + " " + e.title;   // becomes the suggested PDF file name
     window.print(); setTimeout(() => { document.title = old; }, 500);
