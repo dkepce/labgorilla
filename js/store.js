@@ -145,7 +145,24 @@
     setState("needs"); return false;
   };
   LB.unlinkFolder = async function () { F.dir = null; F.filesDir = null; F.name = ""; await idbDel("kv", "dir"); setState(FS_OK ? "none" : "local"); };
+  /* a .lbk file opened from Explorer/Finder (double-click) arrives here as a file handle */
+  LB.openLaunched = async function (handle) {
+    try {
+      const file = await handle.getFile(), j = checkPayload(JSON.parse(await file.text())), when = Date.parse(j.saved) || 0;
+      if (Math.abs(when - savedAt) < 1500) { LB.toast("“" + file.name + "” is already what LabGorilla shows."); return; }
+      if (LB.hasContent()) {
+        const older = when < savedAt, linked = F.dir ? " and in the linked folder" : "";
+        const msg = older
+          ? "“" + file.name + "” is OLDER than what is in LabGorilla now (saved " + new Date(when).toLocaleString() + " vs " + new Date(savedAt).toLocaleString() + ").\n\nOpen it anyway? This replaces everything on screen" + linked + "."
+          : "Open “" + file.name + "”?\n\nThis replaces everything on screen" + linked + " with the contents of this file.";
+        if (!confirm(msg)) return;
+      }
+      LB.applyPayload(j); if (F.dir) await writeFile(false);
+      LB.toast("Opened " + file.name + ".");
+    } catch (e) { LB.toast(e.message === "not a LabGorilla file" ? "That file is not a LabGorilla file." : "That file could not be opened: " + e.message); }
+  };
   LB.initFile = async function () {
+    if (window.launchQueue) launchQueue.setConsumer(p => { if (p.files && p.files.length) LB.openLaunched(p.files[0]); });
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
     LB.onFileState();
     if (!FS_OK) return;

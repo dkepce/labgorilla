@@ -88,7 +88,11 @@
       '<div class="tsearch"><input type="text" placeholder="Search everything…" aria-label="Search everything" autocomplete="off" data-b="tmp.gq" data-rin="1" value="' + esc(LB.tmp.gq || "") + '">' + globalResults() + "</div>" +
       fileChip() + '<button class="tbtn" data-a="pop" data-p="theme" title="Colors"><span style="width:10px;height:10px;border-radius:50%;background:var(--acc);display:inline-block"></span>Colors</button></header>';
   }
-  LB.onFileState = function () { if (document.querySelector("#app .top")) LB.render(); };
+  LB.onFileState = function () {   // only refresh the small file button (and the file dialog if open); a full render would interrupt typing and pickers
+    if (!document.querySelector("#app .top")) return;
+    if (LB.tmp.pop === "file") { LB.render(); return; }
+    const b = document.querySelector('#app .top [data-p="file"]'); if (b) b.outerHTML = fileChip();
+  };
 
   /* ---------- popovers & dialogs ---------- */
   function themePop() {
