@@ -1,0 +1,17 @@
+{
+  "name": "Labbook",
+  "short_name": "Labbook",
+  "description": "A lab notebook for experiments, protocols, inventory and planning.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef0f4",
+  "theme_color": "#1b2030",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ],
+  "file_handlers": [
+    { "action": "./index.html", "accept": { "application/x-labbook": [".lbk"] } }
+  ]
+}
