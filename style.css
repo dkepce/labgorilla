@@ -218,19 +218,44 @@ input:disabled,textarea:disabled,select:disabled{background:#f5f6fa!important;co
 .warnbox2{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:13px}
 
 #print{display:none}
+@page{size:A4;margin:16mm 15mm 18mm;@bottom-left{content:"LabGorilla";font:8pt system-ui,sans-serif;color:#777}@bottom-right{content:"Page " counter(page) " of " counter(pages);font:8pt system-ui,sans-serif;color:#777}}
 @media print{
+  html,body{height:auto;background:#fff}
   #app,#toast{display:none!important}
-  #print{display:block;font:12pt/1.5 system-ui,sans-serif;color:#000}
-  #print h1{font-size:20pt;margin:0 0 4pt}
-  #print h2{font-size:13pt;margin:14pt 0 3pt;border-bottom:1px solid #999}
-  #print .pm{color:#444;font-size:10pt}
-  #print table{border-collapse:collapse;width:100%}
-  #print td,#print th{border:1px solid #999;padding:3pt 6pt;text-align:left;font-size:10pt}
-  #print img{max-width:48%;max-height:240pt;margin:4pt}
-  #print pre{white-space:pre-wrap;font:inherit;margin:0}
+  #print{display:block;font:10.5pt/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1b2030;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #print .ph{display:flex;justify-content:space-between;align-items:center;border-bottom:3pt solid var(--acc);padding-bottom:6pt;margin-bottom:12pt}
+  #print .pb{font-weight:700;letter-spacing:.04em;color:var(--acc-d);font-size:10pt}
+  #print .stamp{font-size:9pt;font-weight:700;border-radius:4pt;padding:2pt 8pt;background:#fdecc8;color:#7a4b00}
+  #print .stamp.ok{background:#d9f2e4;color:#14683f}
+  #print h1{font-size:20pt;line-height:1.2;margin:0 0 10pt;letter-spacing:-.01em}
+  #print .pmeta{width:100%;border-collapse:collapse;margin-bottom:14pt;font-size:9.5pt}
+  #print .pmeta th{width:28%;text-align:left;font-weight:600;color:#555b70;padding:3pt 8pt 3pt 0;vertical-align:top;border:0}
+  #print .pmeta td{padding:3pt 0;border:0;border-bottom:.5pt solid #e3e5ee}
+  #print .pmeta tr:last-child td,#print .pmeta tr:last-child th{border-bottom:0}
+  #print section{margin:0 0 14pt;break-inside:avoid-page}
+  #print section.long{break-inside:auto}
+  #print h2{font-size:11.5pt;margin:0 0 5pt;padding:0 0 2pt;color:var(--acc-d);border-bottom:.75pt solid var(--acc-m);break-after:avoid}
+  #print .tx{white-space:pre-wrap}
+  #print table.t{border-collapse:collapse;width:100%;font-size:9.5pt}
+  #print table.t th{background:var(--acc-s);text-align:left;font-weight:700;padding:4pt 7pt;border:.5pt solid #c9cde0}
+  #print table.t td{padding:4pt 7pt;border:.5pt solid #c9cde0;vertical-align:top}
+  #print table.t tr{break-inside:avoid}
+  #print table.t tr:nth-child(even) td{background:#f8f9fc}
+  #print td.ck{font-size:11pt;line-height:1;width:34pt;text-align:center}
+  #print .chip{display:inline-grid;gap:4pt;padding:8pt;border:1pt solid var(--acc-m);border-radius:8pt;margin:3pt 0 5pt}
+  #print .chip i{display:block;width:13pt;height:13pt;border-radius:50%;border:1.25pt dashed var(--acc-d);box-sizing:border-box}
+  #print .chip i.on{background:var(--acc-m);border-style:solid}
+  #print .imgs{display:grid;grid-template-columns:1fr 1fr;gap:8pt;margin-top:6pt}
+  #print figure{margin:0;break-inside:avoid;border:.5pt solid #c9cde0;border-radius:4pt;padding:4pt}
+  #print figure img{width:100%;max-height:200pt;object-fit:contain;display:block}
+  #print figcaption{font-size:8.5pt;color:#555b70;margin-top:2pt;word-break:break-all}
+  #print .small{font-size:9pt;color:#555b70}
+  #print .rec div{padding:1.5pt 0;border-bottom:.5pt solid #eceef4}
+  #print .note{background:#fffdf3;border-left:3pt solid #efe6bd;padding:4pt 8pt;margin:0 0 12pt;font-size:9.5pt}
 }
 @media (max-width:1100px){.right,.order,.calside{display:none}.side,.plist{width:220px}}
 
 .trow span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .trow.exp span:last-child{overflow:visible}
 @media (max-width:1250px){.two{flex-direction:column}.two>*{width:100%}}
+#print th.ck{width:34pt;text-align:center}

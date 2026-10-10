@@ -37,7 +37,7 @@
   }
   function head(e) {
     const P = "D.entries." + e.id, x = LB.expOf(e), dis = e.locked ? "disabled" : "", en = enteredLabel(e);
-    return '<div class="ehead"><div class="t"><div class="meta"><span class="mono">' + esc(e.code) + "</span>" + (x ? "<span>" + esc(x.name) + "</span>" : "") +
+    return '<div class="ehead"><div class="t"><div class="pmeta"><span class="mono">' + esc(e.code) + "</span>" + (x ? "<span>" + esc(x.name) + "</span>" : "") +
       '<label>Experiment date <input type="date" data-b="' + P + '.date" data-act="entryDate" value="' + e.date + '" ' + dis + '></label><span class="' + en[1] + '" style="' + (en[1] ? "" : "") + '">' + en[0] + "</span></div>" +
       '<input type="text" class="etitle" aria-label="Entry title" data-b="' + P + '.title" data-live="' + P + '.title" data-log="Renamed entry" value="' + esc(e.title) + '" ' + dis + " autocomplete=\"off\"></div>" +
       '<span class="badge ' + (e.locked ? "ok" : "") + '" style="margin-top:8px">' + (e.locked ? "Signed &amp; locked" : "Draft") + "</span>" +
@@ -208,24 +208,35 @@
 
   /* ---------- PDF export (print dialog → Save as PDF) ---------- */
   A.exportPdf = async () => {
-    const e = LB.cur(); if (!e) return; const D = LB.D, x = LB.expOf(e);
-    const tx = (t, v) => v && v.trim() ? "<h2>" + t + "</h2><pre>" + esc(v) + "</pre>" : "";
-    let h = "<h1>" + esc(e.title) + '</h1><div class="pm">' + esc(e.code) + (x ? " · " + esc(x.name) : "") + " · Experiment date " + U.fmt(e.date, true) + " · Entered " + U.fmt(e.entered, true) + (e.locked ? " · Signed &amp; locked" : " · Draft") + (e.protocol ? " · Protocol: " + esc(e.protocol.title) + " v" + e.protocol.ver : "") + "</div>";
-    h += tx("Aim", e.aim) + tx("Hypothesis", e.hyp);
-    if (e.mats.length) h += "<h2>Materials</h2><table><tr><th>Item</th><th>Type</th><th>Details</th><th>Used</th><th>Left after</th></tr>" + e.mats.map(m => { const it = D.items.find(i => i.id === m.id); return it ? "<tr><td>" + esc(it.name) + "</td><td>" + esc(it.kind) + "</td><td>" + esc(it.sub) + "</td><td>" + esc(m.used ? m.used + " " + m.unit : "") + "</td><td>" + esc(m.left ? m.left + " " + m.unit : "") + "</td></tr>" : ""; }).join("") + "</table>";
-    if (e.steps.length) h += "<h2>Procedure</h2><table>" + e.steps.map((s, i) => "<tr><td>" + (i + 1) + "</td><td>" + esc(s.t) + "</td><td>" + (s.done ? "done" : "–") + "</td></tr>").join("") + "</table>";
-    const loaded = e.map.cells.filter(c => c.on).length;
-    if (loaded) h += "<h2>Chip loading</h2><div>" + loaded + " of " + e.map.cells.length + " positions loaded (" + e.map.rows + " × " + e.map.cols + "). Empty: " + (e.map.cells.map((c, i) => (c.on ? 0 : i + 1)).filter(Boolean).join(", ") || "none") + ".</div>" + (e.map.note ? "<pre>" + esc(e.map.note) + "</pre>" : "");
-    h += tx("Results", e.results);
-    const imgs = []; for (const f of e.files) if (LB.isImage(f)) { const u = await LB.fileUrl(f); if (u) imgs.push('<img src="' + u + '" alt="' + esc(f.name) + '">'); }
-    if (e.files.length) h += "<h2>Files</h2><div>" + e.files.map(f => esc(f.name)).join(", ") + "</div><div>" + imgs.join("") + "</div>";
-    h += tx("Conclusion", e.concl);
-    const ns = e.sn.map((n, i) => (n.trim() ? "<b>" + SEC[i] + ":</b> " + esc(n) : "")).filter(Boolean);
-    if (ns.length) h += "<h2>Notes</h2>" + ns.map(n => "<pre>" + n + "</pre>").join("");
-    if (e.comments.length) h += "<h2>Comments</h2>" + e.comments.map(c => "<div><b>" + esc(c.who) + "</b> (" + U.stampStr(c.at) + "): " + esc(c.text) + "</div>").join("");
-    h += "<h2>History</h2>" + e.hist.slice().reverse().map(x => '<div class="pm">' + U.stampStr(x.at) + " · " + esc(x.msg) + "</div>").join("");
+    const e = LB.cur(); if (!e) return; const D = LB.D, x = LB.expOf(e), proj = x && D.projects.find(p => p.id === x.projectId);
+    const tx = (t, v, cls) => v && v.trim() ? "<section" + (cls ? ' class="' + cls + '"' : "") + "><h2>" + t + '</h2><div class="tx">' + esc(v) + "</div></section>" : "";
+    const note = (label, v) => (v && v.trim() ? '<div class="note"><b>' + label + ":</b> " + esc(v) + "</div>" : "");
+    const signed = e.hist.slice().reverse().find(h => /^Signed/.test(h.msg));
+    let h = '<div class="ph"><span class="pb">LabGorilla · Lab notebook</span><span class="stamp' + (e.locked ? " ok" : "") + '">' + (e.locked ? "Signed &amp; locked" + (signed ? " · " + U.stampStr(signed.at) : "") : "Draft") + "</span></div>";
+    h += "<h1>" + esc(e.title) + "</h1>";
+    const gap = U.daysBetween(e.date, e.entered);
+    const rows = [["Entry", esc(e.code)], ["Project / experiment", esc((proj ? proj.name + " / " : "") + (x ? LB.expCode(x) + " · " + x.name : "–"))], ["Experiment date", U.fmtLong(e.date)],
+      ["Entered in the lab book", U.fmt(e.entered, true) + (gap > 0 ? " (" + gap + (gap === 1 ? " day" : " days") + " after the experiment)" : "")], ["Protocol", e.protocol ? esc(e.protocol.title) + " (v" + e.protocol.ver + ")" : "none"]];
+    h += '<table class="pmeta">' + rows.map(r => "<tr><th>" + r[0] + "</th><td>" + r[1] + "</td></tr>").join("") + "</table>";
+    h += tx("Aim", e.aim) + tx("Hypothesis", e.hyp) + note("Notes", e.sn[0]);
+    const mats = e.mats.map(m => ({ m, it: D.items.find(i => i.id === m.id) })).filter(r => r.it);
+    if (mats.length) h += '<section class="long"><h2>Materials</h2><table class="t"><tr><th>Item</th><th>Type</th><th>Details</th><th>Used</th><th>Left after</th></tr>' + mats.map(({ m, it }) => "<tr><td>" + esc(it.name) + "</td><td>" + esc(it.kind) + "</td><td>" + esc(it.sub) + "</td><td>" + esc(m.used ? (m.used + " " + m.unit).trim() : "") + "</td><td>" + esc(m.left ? (m.left + " " + m.unit).trim() : "") + "</td></tr>").join("") + "</table></section>" + note("Notes", e.sn[1]);
+    if (e.steps.length) h += '<section class="long"><h2>Procedure</h2><table class="t"><tr><th style="width:22pt">#</th><th>Step</th><th class="ck">Done</th></tr>' + e.steps.map((s, i) => "<tr><td>" + (i + 1) + "</td><td>" + esc(s.t) + '</td><td class="ck">' + (s.done ? "☑" : "☐") + "</td></tr>").join("") + "</table></section>" + note("Notes", e.sn[2]);
+    const mp = e.map, loaded = mp.cells.filter(c => c.on).length;
+    if (loaded) h += '<section><h2>Chip loading</h2><div class="chip" style="grid-template-columns:repeat(' + mp.cols + ',13pt)">' + mp.cells.map(c => '<i class="' + (c.on ? "on" : "") + '"></i>').join("") + '</div><div class="small">' + loaded + " of " + mp.cells.length + " positions loaded (" + mp.rows + " × " + mp.cols + "). Empty positions: " + (mp.cells.map((c, i) => (c.on ? 0 : i + 1)).filter(Boolean).join(", ") || "none") + ".</div>" + (mp.note ? '<div class="tx">' + esc(mp.note) + "</div>" : "") + "</section>";
+    h += tx("Results", e.results, "long");
+    const figs = [], others = [];
+    for (const f of e.files) {
+      if (LB.isImage(f)) { const u = await LB.fileUrl(f); if (u) { figs.push('<figure><img src="' + u + '" alt="' + esc(f.name) + '"><figcaption>' + esc(f.name) + "</figcaption></figure>"); continue; } }
+      others.push(esc(f.name) + " (" + U.size(f.size || 0) + ")");
+    }
+    if (figs.length || others.length) h += '<section class="long"><h2>Attached files</h2>' + (figs.length ? '<div class="imgs">' + figs.join("") + "</div>" : "") + (others.length ? '<div class="small" style="margin-top:6pt">Other files: ' + others.join(", ") + "</div>" : "") + "</section>";
+    h += note("Notes", e.sn[3]) + tx("Conclusion &amp; next steps", e.concl) + note("Notes", e.sn[4]);
+    if (e.comments.length) h += '<section class="long rec"><h2>Comments</h2>' + e.comments.map(c => "<div><b>" + esc(c.who) + '</b> <span class="small">' + U.stampStr(c.at) + "</span><br>" + esc(c.text) + "</div>").join("") + "</section>";
+    h += '<section class="long rec"><h2>Change history</h2>' + e.hist.slice().reverse().map(z => '<div class="small">' + U.stampStr(z.at) + " · " + esc(z.msg) + "</div>").join("") + '</section><div class="small">Printed ' + U.fmt(U.today(), true) + " from LabGorilla.</div>";
     const p = document.getElementById("print"); p.innerHTML = h;
-    await Promise.all(Array.from(p.querySelectorAll("img")).map(i => (i.decode ? i.decode().catch(() => { }) : 0)));
-    window.print();
+    await Promise.race([Promise.all(Array.from(p.querySelectorAll("img")).map(i => (i.decode ? i.decode().catch(() => { }) : 0))), new Promise(r => setTimeout(r, 4000))]);
+    const old = document.title; document.title = e.code + " " + e.title;   // becomes the suggested PDF file name
+    window.print(); setTimeout(() => { document.title = old; }, 500);
   };
 })(window.LB);
