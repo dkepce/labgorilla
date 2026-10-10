@@ -2,6 +2,7 @@
 (function (LB) {
   const U = LB.U, esc = U.esc, A = LB.actions;
   const SEC = LB.SECTIONS;
+  const colOf = c => (/^#[0-9a-f]{6}$/i.test((c && c.color) || "") ? c.color : "");
   const T = (rows, v, extra) => '<textarea rows="' + rows + '" ' + extra + ">" + esc(v) + "</textarea>";
 
   /* ---------- left tree ---------- */
@@ -37,7 +38,7 @@
   }
   function head(e) {
     const P = "D.entries." + e.id, x = LB.expOf(e), dis = e.locked ? "disabled" : "", en = enteredLabel(e);
-    return '<div class="ehead"><div class="t"><div class="pmeta"><span class="mono">' + esc(e.code) + "</span>" + (x ? "<span>" + esc(x.name) + "</span>" : "") +
+    return '<div class="ehead"><div class="t"><div class="meta"><span class="mono">' + esc(e.code) + "</span>" + (x ? "<span>" + esc(x.name) + "</span>" : "") +
       '<label>Experiment date <input type="date" data-b="' + P + '.date" data-act="entryDate" value="' + e.date + '" ' + dis + '></label><span class="' + en[1] + '" style="' + (en[1] ? "" : "") + '">' + en[0] + "</span></div>" +
       '<input type="text" class="etitle" aria-label="Entry title" data-b="' + P + '.title" data-live="' + P + '.title" data-log="Renamed entry" value="' + esc(e.title) + '" ' + dis + " autocomplete=\"off\"></div>" +
       '<span class="badge ' + (e.locked ? "ok" : "") + '" style="margin-top:8px">' + (e.locked ? "Signed &amp; locked" : "Draft") + "</span>" +
@@ -76,9 +77,13 @@
       '<input type="text" placeholder="+ Add a step and press Enter" aria-label="Add a step" data-b="tmp.newStep" data-enter="addStep" value="' + esc(LB.tmp.newStep || "") + '" ' + dis + ' autocomplete="off" style="border-width:0;border-top:1px solid var(--line2);border-radius:0;padding:10px 2px 2px"></div>';
     const map = '<div class="card"><h3>Chip loading map</h3><div class="muted sm">Click a position to mark it loaded or empty.</div>' +
       '<div class="chipmap"><div class="port"><i></i>IN</div><div class="pipe"></div><div class="chamber" style="grid-template-columns:repeat(' + mp.cols + ',minmax(0,1fr))">' +
-      cells.map((c, i) => '<button class="well' + (c.on ? " on" : "") + '" data-a="well" data-i="' + i + '" ' + dis + ' aria-label="Position ' + (i + 1) + (c.on ? ", loaded" : ", empty") + '">' + (i + 1) + "</button>").join("") + '</div><div class="pipe"></div><div class="port out"><i></i>OUT</div></div>' +
-      '<div class="mapset"><span class="mono">chamber · ' + loaded + "/" + cells.length + ' loaded</span><span class="grow"></span>Rows <input type="number" min="1" max="12" data-b="' + P + '.map.rows" data-t="num" data-act="mapResize" value="' + mp.rows + '" ' + dis + ">× columns <input type=\"number\" min=\"1\" max=\"12\" data-b=\"" + P + '.map.cols" data-t="num" data-act="mapResize" value="' + mp.cols + '" ' + dis + '><button class="link sm" data-a="mapClear" ' + dis + ">Clear all</button></div>" +
+      cells.map((c, i) => '<button class="well' + (c.on ? " on" : "") + '" data-a="well" data-i="' + i + '" ' + dis + ' title="' + esc(c.note || "") + '"' + (c.on && colOf(c) ? ' style="background:' + colOf(c) + ';border-color:color-mix(in srgb,' + colOf(c) + ' 55%,#000)"' : "") + ' aria-label="Position ' + (i + 1) + (c.on ? ", loaded" : ", empty") + '">' + (i + 1) + "</button>").join("") + '</div><div class="pipe"></div><div class="port out"><i></i>OUT</div></div>' +
+      '<div class="mapset"><span class="mono">chamber · ' + loaded + "/" + cells.length + ' loaded</span><span class="grow"></span>Rows <input type="number" min="1" max="12" data-b="' + P + '.map.rows" data-t="num" data-act="mapResize" value="' + mp.rows + '" ' + dis + ">× columns <input type=\"number\" min=\"1\" max=\"12\" data-b=\"" + P + '.map.cols" data-t="num" data-act="mapResize" value="' + mp.cols + '" ' + dis + '><button class="link sm" data-a="mapFill" ' + dis + '>Fill all loaded…</button><label class="sm" style="display:flex;gap:4px;align-items:center">Color all loaded <input type="color" class="pcol" value="#a5b4fc" data-act="mapColorAll" data-b="tmp.allColor" ' + dis + '></label><button class="link sm" data-a="mapClear" ' + dis + ">Clear all</button></div>" +
       (empties.length && loaded ? '<div class="warnbox">Empty positions: ' + empties.join(", ") + ". Note why in Results if this is a deviation.</div>" : "") +
+      (() => { const seen = {}; cells.forEach(c => { if (c.on && colOf(c)) seen[colOf(c) + "|" + (c.note || "")] = { color: colOf(c), note: c.note || "" }; }); const l = Object.values(seen); return l.length ? '<div class="legend">' + l.map(x => '<span class="lg"><i style="background:' + x.color + '"></i>' + esc(x.note || "(no label)") + "</span>").join("") + "</div>" : ""; })() +
+      '<div class="lbl">What is in each position</div><div class="poslist">' +
+      cells.map((c, i) => '<label class="posrow"><span class="pn' + (c.on ? " on" : "") + '">' + (i + 1) + '</span><input type="text" list="matlist" aria-label="Contents of position ' + (i + 1) + '" placeholder="' + (c.on ? "e.g. MCF-7 spheroid, 180 µm" : "empty") + '" data-b="' + P + ".map.cells." + i + '.note" data-log="Edited chip position notes" value="' + esc(c.note || "") + '" ' + dis + ' autocomplete="off"><input type="color" class="pcol" aria-label="Color of position ' + (i + 1) + '" title="Color for this position" data-b="' + P + ".map.cells." + i + '.color" data-render="1" data-log="Changed chip position color" value="' + (colOf(c) || "#a5b4fc") + '" ' + dis + (colOf(c) ? "" : ' style="opacity:.35"') + '>' + (colOf(c) ? '<button class="x" data-a="posColorClear" data-i="' + i + '" ' + dis + ' aria-label="Remove color">×</button>' : "") + "</label>").join("") + '</div>' +
+      '<datalist id="matlist">' + e.mats.map(m => { const it = LB.D.items.find(x => x.id === m.id); return it ? '<option value="' + esc(it.name) + '">' : ""; }).join("") + '</datalist>' +
       '<div class="lbl">Notes on loading</div>' + T(2, mp.note || "", 'aria-label="Notes on loading" data-b="' + P + '.map.note" data-log="Edited loading notes" ' + dis) + "</div>";
     return '<div class="two">' + steps + map + "</div>";
   }
@@ -150,6 +155,14 @@
   A.addStep = el => { const e = entryOK(), v = el.value.trim(); if (!e || !v) return; e.steps.push({ t: v, done: false }); LB.tmp.newStep = ""; LB.log(e, "Added a step"); LB.save(); LB.render(); };
   A.well = el => { const e = entryOK(); if (!e) return; const c = e.map.cells[+el.dataset.i]; c.on = !c.on; LB.log(e, "Changed chip loading map"); LB.save(); LB.render(); };
   A.mapClear = () => { const e = entryOK(); if (!e) return; e.map.cells.forEach(c => { c.on = false; }); LB.save(); LB.render(); };
+  A.posColorClear = el => { const e = entryOK(); if (!e) return; e.map.cells[+el.dataset.i].color = ""; LB.log(e, "Changed chip position color"); LB.save(); LB.render(); };
+  A.mapColorAll = el => { const e = entryOK(); if (!e || !el.value) return; e.map.cells.forEach(c => { if (c.on) c.color = el.value; }); LB.log(e, "Colored loaded chip positions"); LB.save(); LB.render(); };
+  A.mapFill = () => {
+    const e = entryOK(); if (!e) return;
+    const v = prompt("What do all the loaded positions contain? (e.g. MCF-7 spheroid, 150–200 µm)", "");
+    if (v === null) return; e.map.cells.forEach(c => { if (c.on) c.note = v.trim(); });
+    LB.log(e, "Filled chip position notes"); LB.save(); LB.render();
+  };
   A.mapResize = () => {
     const e = entryOK(); if (!e) return; const m = e.map;
     m.rows = Math.max(1, Math.min(12, Math.round(m.rows) || 1)); m.cols = Math.max(1, Math.min(12, Math.round(m.cols) || 1));
@@ -223,7 +236,7 @@
     if (mats.length) h += '<section class="long"><h2>Materials</h2><table class="t"><tr><th>Item</th><th>Type</th><th>Details</th><th>Used</th><th>Left after</th></tr>' + mats.map(({ m, it }) => "<tr><td>" + esc(it.name) + "</td><td>" + esc(it.kind) + "</td><td>" + esc(it.sub) + "</td><td>" + esc(m.used ? (m.used + " " + m.unit).trim() : "") + "</td><td>" + esc(m.left ? (m.left + " " + m.unit).trim() : "") + "</td></tr>").join("") + "</table></section>" + note("Notes", e.sn[1]);
     if (e.steps.length) h += '<section class="long"><h2>Procedure</h2><table class="t"><tr><th style="width:22pt">#</th><th>Step</th><th class="ck">Done</th></tr>' + e.steps.map((s, i) => "<tr><td>" + (i + 1) + "</td><td>" + esc(s.t) + '</td><td class="ck">' + (s.done ? "☑" : "☐") + "</td></tr>").join("") + "</table></section>" + note("Notes", e.sn[2]);
     const mp = e.map, loaded = mp.cells.filter(c => c.on).length;
-    if (loaded) h += '<section><h2>Chip loading</h2><div class="chip" style="grid-template-columns:repeat(' + mp.cols + ',13pt)">' + mp.cells.map(c => '<i class="' + (c.on ? "on" : "") + '"></i>').join("") + '</div><div class="small">' + loaded + " of " + mp.cells.length + " positions loaded (" + mp.rows + " × " + mp.cols + "). Empty positions: " + (mp.cells.map((c, i) => (c.on ? 0 : i + 1)).filter(Boolean).join(", ") || "none") + ".</div>" + (mp.note ? '<div class="tx">' + esc(mp.note) + "</div>" : "") + "</section>";
+    if (loaded) h += '<section><h2>Chip loading</h2><div class="chip" style="grid-template-columns:repeat(' + mp.cols + ',13pt)">' + mp.cells.map(c => '<i class="' + (c.on ? "on" : "") + '"' + (c.on && colOf(c) ? ' style="background:' + colOf(c) + '"' : "") + "></i>").join("") + '</div><div class="small">' + loaded + " of " + mp.cells.length + " positions loaded (" + mp.rows + " × " + mp.cols + "). Empty positions: " + (mp.cells.map((c, i) => (c.on ? 0 : i + 1)).filter(Boolean).join(", ") || "none") + ".</div>" + (mp.cells.some(c => c.note) ? '<table class="t" style="margin-top:5pt"><tr><th style="width:34pt">Pos.</th><th>Contents</th></tr>' + mp.cells.map((c, i) => (c.note ? "<tr><td>" + (i + 1) + "</td><td>" + (colOf(c) ? '<i class="sw" style="background:' + colOf(c) + '"></i>' : "") + esc(c.note) + "</td></tr>" : "")).join("") + "</table>" : "") + (mp.note ? '<div class="tx" style="margin-top:5pt">' + esc(mp.note) + "</div>" : "") + "</section>";
     h += tx("Results", e.results, "long");
     const figs = [], others = [];
     for (const f of e.files) {
