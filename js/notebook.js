@@ -49,10 +49,10 @@
       '<button class="btn" style="margin-top:4px" data-a="exportPdf">Export PDF</button><button class="btn dark" style="margin-top:4px" data-a="toggleLock">' + (e.locked ? "Unlock" : "Sign &amp; lock") + "</button></div>";
   }
   /* cards an entry can switch off (data is kept; they are just hidden and left out of the PDF) */
-  const CARDS = [["materials", "Materials"], ["procedure", "Procedure steps"], ["chip", "Chip loading map"]];
+  const CARDS = [["materials", "Materials"]];   // the Procedure tab's own cards are switched on and off there
   const cardsOf = e => (e.cards = Object.assign({ materials: true, procedure: true, chip: true }, e.cards));
   LB.cardsOf = cardsOf;
-  const visSecs = e => { const c = cardsOf(e); return [0, c.materials ? 1 : -1, c.procedure || c.chip ? 2 : -1, 3, 4].filter(i => i >= 0); };
+  const visSecs = e => { const c = cardsOf(e); return [0, c.materials ? 1 : -1, 2, 3, 4].filter(i => i >= 0); };
   function secBar(e) {
     return '<div class="secs">' + visSecs(e).map((i, k) => '<button class="pill' + (LB.ui.sec === i ? " on" : "") + '" data-a="setSec" data-n="' + i + '">' + (k + 1) + " " + SEC[i] + (e.sn[i] ? " •" : "") + "</button>").join("") + "</div>";
   }
@@ -65,10 +65,11 @@
       (cd.materials ? '<span class="muted">Linked materials</span><b>' + e.mats.length + " items</b>" : "") +
       (cd.procedure ? '<span class="muted">Procedure</span><b>' + e.steps.filter(s => s.done).length + " of " + e.steps.length + " steps done</b>" : "") +
       (cd.chip ? '<span class="muted">Chip positions</span><b>' + loaded + " of " + e.map.cells.length + " loaded</b>" : "") +
+      (LB.cardCount(e) ? '<span class="muted">Lab cards</span><b>' + LB.cardCount(e) + " added</b>" : "") +
       '<span class="muted">Files</span><b>' + e.files.length + " attached</b></div>" +
       '<div class="lbl">Cards in this entry</div><div class="row wrap" style="gap:16px">' +
       CARDS.map(([k, l]) => '<label class="row sm" style="gap:6px"><input type="checkbox" data-b="' + P + ".cards." + k + '" data-render="1" data-log="Changed which cards are used" ' + (cd[k] ? "checked" : "") + " " + dis + ' style="accent-color:var(--acc);margin:0">' + l + "</label>").join("") +
-      '<span class="muted sm">' + (e.locked ? "Unlock the entry to change which cards are used." : "Switch off what this experiment does not need, for example the chip map. Nothing is deleted.") + "</span></div>" +
+      '<span class="muted sm">' + (e.locked ? "Unlock the entry to change which cards are used." : "Switch off Materials if this experiment does not need it. Procedure steps, the chip map and other lab cards are managed on the Procedure tab. Nothing is deleted.") + "</span></div>" +
       '<div class="row"><button class="link sm" style="color:#b42318" data-a="delEntry">Delete this entry</button></div></div>';
   }
   function materials(e) {
@@ -88,8 +89,9 @@
   function procedure(e) {
     const P = "D.entries." + e.id, dis = e.locked ? "disabled" : "", total = e.steps.length, done = e.steps.filter(s => s.done).length;
     const mp = e.map, cells = mp.cells, loaded = cells.filter(c => c.on).length, empties = cells.map((c, i) => (c.on ? 0 : i + 1)).filter(Boolean);
-    const steps = '<div class="card"><div class="row"><h3 class="grow">Procedure</h3><span class="sm" style="color:var(--acc-d);font-weight:600">' + done + " of " + total + '</span><button class="link sm" data-a="hideCard" data-card="procedure" ' + dis + ' title="Hide this card in this entry">Hide card</button></div><div class="bar"><i style="width:' + (total ? Math.round(done / total * 100) : 0) + '%"></i></div>' +
-      e.steps.map((s, i) => '<div class="step' + (s.done ? " done" : "") + '"><input type="checkbox" data-a="toggleStep" data-i="' + i + '" ' + (s.done ? "checked" : "") + " " + dis + ' aria-label="Done"><input type="text" aria-label="Step" data-b="' + P + ".steps." + i + '.t" data-log="Edited a step" value="' + esc(s.t) + '" ' + dis + '><button class="x" data-a="rmStep" data-i="' + i + '" ' + dis + ' aria-label="Remove step">×</button></div>').join("") +
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const steps = '<div class="card"><div class="row" style="gap:12px">' + LB.ring(pct) + '<div class="grow"><h3 style="margin:0;font-size:15px">Procedure</h3><div class="sm" style="color:' + (total && done === total ? "var(--ok)" : "var(--mute)") + ';font-weight:600">' + (!total ? "No steps yet" : done === total ? "All " + total + " steps done 🎉" : done + " of " + total + " steps done") + '</div></div><button class="link sm" data-a="hideCard" data-card="procedure" ' + dis + ' title="Hide this card in this entry">Hide card</button></div>' +
+      e.steps.map((s, i) => '<div class="step' + (s.done ? " done" : "") + '"><input type="checkbox" data-a="toggleStep" data-i="' + i + '" ' + (s.done ? "checked" : "") + " " + dis + ' aria-label="Done"><input type="text" aria-label="Step" data-b="' + P + ".steps." + i + '.t" data-log="Edited a step" value="' + esc(s.t) + '" ' + dis + '>' + LB.stepTimer(e, i, s, dis) + '<button class="x" data-a="rmStep" data-i="' + i + '" ' + dis + ' aria-label="Remove step">×</button></div>').join("") +
       (e.steps.length ? "" : '<div class="muted sm">No steps yet. Add them below, or start entries from a protocol.</div>') +
       '<input type="text" placeholder="+ Add a step and press Enter" aria-label="Add a step" data-b="tmp.newStep" data-enter="addStep" value="' + esc(LB.tmp.newStep || "") + '" ' + dis + ' autocomplete="off" style="border-width:0;border-top:1px solid var(--line2);border-radius:0;padding:10px 2px 2px"></div>';
     const map = '<div class="card"><div class="row"><h3 class="grow">Chip loading map</h3><button class="link sm" data-a="hideCard" data-card="chip" ' + dis + ' title="Hide this card in this entry">Hide card</button></div><div class="muted sm">Click a position to mark it loaded or empty.</div>' +
@@ -104,8 +106,7 @@
       '<datalist id="matlist">' + e.mats.map(m => { const it = LB.D.items.find(x => x.id === m.id); return it ? '<option value="' + esc(it.name) + '">' : ""; }).join("") + '</datalist>' +
       '<div class="lbl">Notes on loading</div>' + T(2, mp.note || "", 'aria-label="Notes on loading" data-b="' + P + '.map.note" data-log="Edited loading notes" ' + dis) + "</div>";
     const cd = cardsOf(e);
-    return '<div class="two">' + (cd.procedure ? steps : "") + (cd.chip ? map : "") + "</div>" +
-      (!cd.procedure || !cd.chip ? '<div class="row wrap">' + (!cd.procedure ? '<button class="btn" style="border-style:dashed" data-a="showCard" data-card="procedure" ' + dis + ">+ Add procedure steps</button>" : "") + (!cd.chip ? '<button class="btn" style="border-style:dashed" data-a="showCard" data-card="chip" ' + dis + ">+ Add chip loading map</button>" : "") + "</div>" : "");
+    return LB.cardsPicker(e) + (cd.procedure || cd.chip ? '<div class="two">' + (cd.procedure ? steps : "") + (cd.chip ? map : "") + "</div>" : "") + LB.cardsList(e);
   }
   function results(e) {
     const P = "D.entries." + e.id, dis = e.locked ? "disabled" : "";
@@ -228,7 +229,7 @@
     const n = Object.values(D.entries).filter(e => e.expId === x.id).length;
     const e = { id: U.uid(), expId: x.id, code: LB.expCode(x) + U.letter(n), title: nw.title.trim() || (pr ? pr.title : "Untitled entry"), date: nw.date || U.today(), entered: U.today(), enteredAt: Date.now(), locked: false,
       aim: "", hyp: "", results: "", concl: "", sn: ["", "", "", "", ""], steps: pr ? pr.steps.map(t => ({ t, done: false })) : [], protocol: pr ? { id: nw.proto, ver: pr.ver, title: pr.title } : null,
-      map: LB.newMap(), mats: pr ? pr.mats.filter(id => D.items.some(i => i.id === id)).map(id => ({ id, used: "", left: "", unit: "" })) : [], files: [], comments: [], hist: [] };
+      map: LB.newMap(), extra: [], mats: pr ? pr.mats.filter(id => D.items.some(i => i.id === id)).map(id => ({ id, used: "", left: "", unit: "" })) : [], files: [], comments: [], hist: [] };
     LB.log(e, pr ? "Entry created from " + pr.title + " v" + pr.ver : "Entry created");
     D.entries[e.id] = e; LB.tmp.pop = ""; LB.ui.openExp[x.id] = true; LB.ui.openProj[x.projectId] = true;
     LB.save(); LB.openEntry(e.id, pr ? 2 : 0);
@@ -259,7 +260,7 @@
   };
 
   /* ---------- PDF export: choose what goes in, then print dialog → Save as PDF ---------- */
-  const EXPORT_ITEMS = [["aim", "Aim and hypothesis"], ["materials", "Materials"], ["procedure", "Procedure steps"], ["chip", "Chip loading map"], ["results", "Results (observations)"], ["files", "Attached images and files"], ["conclusion", "Conclusion and next steps"], ["notes", "My section notes"], ["refs", "References"], ["comments", "Comments"], ["history", "Change history"]];
+  const EXPORT_ITEMS = [["aim", "Aim and hypothesis"], ["materials", "Materials"], ["procedure", "Procedure steps"], ["chip", "Chip loading map"], ["cards", "Lab cards (plate maps, timeline…)"], ["results", "Results (observations)"], ["files", "Attached images and files"], ["conclusion", "Conclusion and next steps"], ["notes", "My section notes"], ["refs", "References"], ["comments", "Comments"], ["history", "Change history"]];
   const exportAvail = (e, k) => (k === "materials" || k === "procedure" || k === "chip" ? cardsOf(e)[k] : true);
   LB.exportModal = function () {
     const e = LB.cur(); if (!e) return ""; const o = LB.ui.exportOpts;
@@ -302,7 +303,8 @@
         (mp.cells.some(c => c.note || c.amt) ? '<table class="t" style="margin-top:5pt"><tr><th style="width:34pt">Pos.</th><th>Contents</th><th style="width:70pt">Amount</th></tr>' + mp.cells.map((c, i) => (c.note || c.amt ? "<tr><td>" + (i + 1) + "</td><td>" + (colOf(c) ? '<i class="sw" style="background:' + colOf(c) + '"></i>' : "") + esc(c.note || "") + "</td><td>" + esc(c.amt || "") + "</td></tr>" : "")).join("") + "</table>" : "") +
         (mp.note ? '<div class="tx" style="margin-top:5pt">' + esc(mp.note) + "</div>" : "") + "</section>";
     }
-    if (cd.procedure || cd.chip) h += note("Notes (procedure)", e.sn[2]);
+    if (on("cards")) h += LB.cardsPrint(e);
+    h += note("Notes (procedure)", e.sn[2]);
     if (on("results")) h += tx("Results", e.results, "long");
     if (on("files")) {
       const figs = [], others = [];

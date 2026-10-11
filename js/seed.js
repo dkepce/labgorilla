@@ -31,6 +31,14 @@
     mk(e7, 1, { title: "Spheroid formation, day 4", date: U.add(t, -2), locked: true, aim: "Check that MCF-7 spheroids reach 150 µm by day 4.", hyp: "Seeding 1000 cells per well gives uniform spheroids.", results: "Mean diameter about 170 µm, uniform in 22 of 24 wells.", concl: "Good enough to proceed to chip loading.", steps: steps(["Seed 1000 cells per well", "Image at day 2 and day 4"], 2), mats: m([mcf7, dmem]) });
     const cur = mk(e7, 0, { title: "Seeding on C7: spheroids into the perfusion chip", date: t, aim: "Load MCF-7 spheroids into the culture chamber of chip C7 and verify integrity under 0.5 µL/min perfusion before the drug series.", hyp: "Spheroids of 150–200 µm stay intact at this flow rate for 24 h.", protocol: { id: pSph, ver: 3, title: "Spheroid loading into perfusion chip" }, steps: steps(D.protocols[pSph].steps, 3), mats: m([mcf7, col, dmem, chip]), comments: [{ who: "Supervisor", text: "Please add the spheroid diameter distribution before the drug series.", at: now }] });
     cur.map.cells.forEach((c, i) => { c.on = i !== 7; });
+    if (LB.newCard) {   // a few example lab cards on the current entry
+      const pl = LB.newCard("plate"); pl.fmt = "24"; pl.title = "Drug plate (24-well)"; pl.conds = [{ id: "k1", name: "Vehicle", color: "#9ca3af" }, { id: "k2", name: "Dox 1 µM", color: "#f97316" }, { id: "k3", name: "Dox 10 µM", color: "#ef4444" }];
+      pl.wells = Array.from({ length: 24 }, (_, i) => (i % 6 < 2 ? "k1" : i % 6 < 4 ? "k2" : "k3"));
+      const tl = LB.newCard("timeline"); tl.events = [{ day: 0, kind: "seed", label: "Load spheroids", done: true }, { day: 1, kind: "drug", label: "Start doxorubicin", done: false }, { day: 2, kind: "medium", label: "Refresh medium", done: false }, { day: 4, kind: "image", label: "Live/dead imaging", done: false }];
+      const fl = LB.newCard("flow"); Object.assign(fl, { chip: "C7", rate: "0.5", dur: "24", medium: "DMEM + 10% FBS" });
+      cur.extra = [tl, fl, pl];
+      cur.steps.forEach(s => { if (!s.done && !s.min) { s.min = 5; } });
+    }
     mk(e6, 0, { title: "Syringe pump flow calibration", date: U.add(t, -9), locked: true, aim: "Compare set flow rate with measured outlet volume.", hyp: "Deviation stays below 5% down to 0.1 µL/min.", results: "Within 3% from 0.5 µL/min; 9% at 0.1 µL/min.", concl: "Use 0.5 µL/min or higher.", steps: steps(["Collect outlet for 30 min per rate"], 1), mats: m([pbs]) });
     D.events.push({ id: U.uid(), date: U.add(t, 1), time: "09:00", title: "Live/dead imaging at 24 h", kind: "imaging" }, { id: U.uid(), date: U.add(t, 2), time: "", title: "Passage MCF-7", kind: "passage" },
       { id: U.uid(), date: U.add(t, 3), time: "", title: "Start doxorubicin series", kind: "other" }, { id: U.uid(), date: U.add(t, 4), time: "", title: "Order collagen I", kind: "order" });
