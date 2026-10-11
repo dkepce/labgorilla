@@ -334,7 +334,7 @@
         (mp.cells.some(c => c.note || c.amt) ? '<table class="t" style="margin-top:5pt"><tr><th style="width:34pt">Pos.</th><th>Contents</th><th style="width:70pt">Amount</th></tr>' + mp.cells.map((c, i) => (c.note || c.amt ? "<tr><td>" + (i + 1) + "</td><td>" + (colOf(c) ? '<i class="sw" style="background:' + colOf(c) + '"></i>' : "") + esc(c.note || "") + "</td><td>" + esc(c.amt || "") + "</td></tr>" : "")).join("") + "</table>" : "") +
         (mp.note ? '<div class="tx" style="margin-top:5pt">' + esc(mp.note) + "</div>" : "") + "</section>";
     }
-    if (on("cards")) h += LB.cardsPrint(e);
+    if (on("cards")) h += await LB.cardsPrint(e);
     if (cd.tabProcedure) h += note("Notes (procedure)", e.sn[2]);
     if (on("results")) h += tx("Results", e.results, "long");
     if (on("files")) {

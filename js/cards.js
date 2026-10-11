@@ -55,7 +55,7 @@
     }
     return '<div class="row wrap" style="gap:12px">' + field("Plate", '<select data-file="plateFmt" data-card="' + c.id + '" ' + dis + ">" + Object.keys(PLATES).map(k => '<option value="' + k + '"' + (String(c.fmt) === k ? " selected" : "") + ">" + k + "-well</option>").join("") + "</select>") +
       '<span class="muted sm grow" style="align-self:flex-end;padding-bottom:8px">Pick a condition, then click or drag over wells. Click a letter or number to paint a whole row or column. Click a painted well again to clear it.</span></div>' +
-      '<div class="conds">' + conds + '<button class="cond erase' + (br === "" ? " sel" : "") + '" data-a="brush" data-card="' + c.id + '" data-k="">⌫ Erase</button><button class="link sm" data-a="addCond" data-card="' + c.id + '" ' + dis + '>+ Condition</button><button class="link sm" data-a="plateClear" data-card="' + c.id + '" ' + dis + ' style="margin-left:auto">Clear plate</button></div>' +
+      '<div class="conds">' + conds + '<button class="cond erase' + (br === "" ? " sel" : "") + '" data-a="brush" data-card="' + c.id + '" data-k="">⌫ Erase</button><button class="link sm" data-a="addCond" data-card="' + c.id + '" ' + dis + '>+ Condition</button><button class="link sm" data-a="plateCopy" data-card="' + c.id + '" title="Copy the plate layout (which condition is in which well) to paste into Excel or Prism" style="margin-left:auto">Copy layout</button><button class="link sm" data-a="plateClear" data-card="' + c.id + '" ' + dis + '>Clear plate</button></div>' +
       '<div class="plate-wrap"><div class="plate" style="--sz:' + sz + "px;grid-template-columns:auto repeat(" + C + ',var(--sz))">' + grid + "</div></div>" +
       '<div class="muted sm">' + c.wells.filter(Boolean).length + " of " + R * C + " wells used</div>";
   }
@@ -175,7 +175,7 @@
     const s = dilSeries(c);
     const tubes = s ? '<div class="dil">' + s.pts.map((p, i) => '<div class="dtube"><div class="tube"><i style="height:' + (55 + 0) + "%;opacity:" + (1 - 0.82 * (i / Math.max(1, s.n))).toFixed(2) + '"></i></div><b>' + p.txt + '</b><span class="muted sm">' + (i === 0 ? "start" : "1:" + +Math.pow(s.f, i).toPrecision(3)) + "</span></div>").join("") +
       (c.control ? '<div class="dtube"><div class="tube ctl"><i style="height:55%;opacity:.08"></i></div><b>0</b><span class="muted sm">vehicle</span></div>' : "") + "</div>" +
-      '<div class="calc">' + (isFinite(s.tr) ? "Each step: move <b>" + +s.tr.toPrecision(3) + " µL</b> from the previous tube into <b>" + +s.dil.toPrecision(3) + " µL</b> " + esc(c.diluent || "diluent") + " (" + c.vol + " µL in each tube)." : "Add a volume per tube to get the pipetting amounts.") + "</div>" : '<div class="muted sm">Enter a start concentration and a dilution factor above 1 (for example 10 for tenfold steps, 2 for halving).</div>';
+      '<div class="row wrap" style="gap:10px"><button class="btn sm" data-a="dilCopy" data-card="' + c.id + '" title="Concentrations as a column you can paste into a Prism XY table">Copy for Prism</button><span class="muted sm">Pastes the concentrations into a Prism table (for example for an IC50 curve).</span></div><div class="calc">' + (isFinite(s.tr) ? "Each step: move <b>" + +s.tr.toPrecision(3) + " µL</b> from the previous tube into <b>" + +s.dil.toPrecision(3) + " µL</b> " + esc(c.diluent || "diluent") + " (" + c.vol + " µL in each tube)." : "Add a volume per tube to get the pipetting amounts.") + "</div>" : '<div class="muted sm">Enter a start concentration and a dilution factor above 1 (for example 10 for tenfold steps, 2 for halving).</div>';
     return '<div class="cfgrid">' + field("Highest concentration", '<span class="row" style="gap:6px">' + txt(P, "stock", c.stock, dis, "10", 'style="width:90px" inputmode="decimal"') + '<select data-b="' + P + '.unit" data-render="1" ' + dis + ">" + sel(UNITS, c.unit) + "</select></span>") +
       field("Dilute by a factor of", txt(P, "factor", c.factor, dis, "10", 'inputmode="decimal"')) + field("Number of points", txt(P, "steps", c.steps, dis, "6", 'inputmode="numeric"')) +
       field("Volume per tube", txt(P, "vol", c.vol, dis, "in µL (optional)", 'inputmode="decimal"')) + field("Diluent", txt(P, "diluent", c.diluent, dis, "medium")) +
@@ -208,10 +208,11 @@
     dilution: { label: "Dilution series", desc: "Concentrations and pipetting amounts", make: () => ({ title: "Dilution series", stock: "10", unit: "µM", factor: "10", steps: "6", vol: "", diluent: "medium", control: true }), body: dilBody, print: dilPrint, data: () => true },
     gel: { label: "Gel lanes", desc: "Lane-by-lane sample list for gels and blots", make: () => ({ title: "Gel lanes", gel: "", run: "", lanes: [{ label: "Ladder", amt: "", ladder: true }, { label: "", amt: "", ladder: false }, { label: "", amt: "", ladder: false }, { label: "", amt: "", ladder: false }, { label: "", amt: "", ladder: false }, { label: "", amt: "", ladder: false }] }), body: gelBody, print: gelPrint, data: c => c.lanes.some(l => l.label) }
   };
-  LB.CARD_TYPES = TYPES;
+  LB.CARD_TYPES = TYPES; LB.CARD_ICONS = IC;
+  LB.cardKit = { field, txt, sel, num, pathOf, extra, cut, PAL, dilSeries, fmtConc, icon };
   LB.newCard = type => Object.assign({ id: U.uid(), type, note: "" }, TYPES[type].make());
   /* old/partial data (or a card from a newer version) must never break the page */
-  LB.fixCard = c => { const m = TYPES[c.type]; if (!m) return false; const d = m.make(); Object.keys(d).forEach(k => { if (c[k] === undefined) c[k] = d[k]; }); c.note = c.note || ""; c.id = c.id || U.uid(); return true; };
+  LB.fixCard = c => { const m = TYPES[c.type]; if (!m) return true; const d = m.make(); Object.keys(d).forEach(k => { if (c[k] === undefined) c[k] = d[k]; }); c.note = c.note || ""; c.id = c.id || U.uid(); return true; };
 
   function cardView(e, c, dis) {
     const T = TYPES[c.type], P = pathOf(e, c), list = extra(e), i = list.indexOf(c);
@@ -222,7 +223,7 @@
       '<textarea rows="2" aria-label="Notes on this card" placeholder="Notes on this card…" data-b="' + P + '.note" data-log="Edited card notes" ' + dis + ">" + esc(c.note) + "</textarea></div>";
   }
   /* the tiles at the top of the Procedure tab, then every added card */
-  LB.cardsList = e => extra(e).map(c => cardView(e, c, e.locked ? "disabled" : "")).join("");
+  LB.cardsList = e => extra(e).filter(c => TYPES[c.type]).map(c => cardView(e, c, e.locked ? "disabled" : "")).join("");
   LB.cardsPicker = function (e) {
     const dis = e.locked ? "disabled" : "", cd = LB.cardsOf(e), list = extra(e);
     const tile = (key, label, desc, on, count) => '<button class="tile' + (on ? " on" : "") + '" data-a="' + (key === "procedure" || key === "chip" ? "tileBuiltin" : "addCard") + '" data-t="' + key + '" data-card="' + key + '" ' + dis + ' aria-pressed="' + (on ? "true" : "false") + '"><span class="ti">' + icon(key === "procedure" ? "steps" : key) + '</span><b>' + label + '</b><span class="td">' + desc + '</span><span class="tc">' + (key === "procedure" || key === "chip" ? (on ? "✓ On" : "+ Add") : count ? "✓ " + count + " added · + another" : "+ Add") + "</span></button>";
@@ -233,10 +234,16 @@
   /* make sure every entry has a clean list of cards (also after a backup is restored) */
   const baseFix = LB.fixData;
   LB.fixData = function () { baseFix(); Object.values(LB.D.entries).forEach(e => { e.extra = (e.extra || []).filter(LB.fixCard); }); };
-  LB.fixData();
+  /* (the first LB.fixData() call happens in folders.js, after analysis.js has registered its card types) */
   /* PDF sections */
-  LB.cardsPrint = function (e) {
-    return extra(e).map(c => { const T = TYPES[c.type]; if (!T || !T.data(c)) return ""; const inner = T.print(e, c); return inner ? '<section><h2>' + esc(c.title) + "</h2>" + inner + (c.note && c.note.trim() ? '<div class="note" style="margin-top:4pt">' + esc(c.note) + "</div>" : "") + "</section>" : ""; }).join("");
+  LB.cardsPrint = async function (e) {
+    const out = [];
+    for (const c of extra(e)) {
+      const T = TYPES[c.type]; if (!T || !T.data(c)) continue;
+      const inner = await T.print(e, c);
+      if (inner) out.push('<section><h2>' + esc(c.title) + "</h2>" + inner + (c.note && c.note.trim() ? '<div class="note" style="margin-top:4pt">' + esc(c.note) + "</div>" : "") + "</section>");
+    }
+    return out.join("");
   };
   LB.cardCount = e => extra(e).length;
 

@@ -185,3 +185,40 @@ body.dragging .fhead,body.dragging .th{transition:background .1s}
   #print .legend{display:flex;flex-wrap:wrap;gap:3pt 12pt;font-size:8.5pt}
   #print .lg i{display:inline-block;width:8pt;height:8pt;border-radius:50%;border:.5pt solid #777;margin-right:4pt}
 }
+
+/* analysis cards: data table, plot, figure, macro */
+.dgrid-wrap{overflow-x:auto;max-height:360px;overflow-y:auto;border:1px solid var(--line2);border-radius:10px}
+.dgrid{border-collapse:collapse;font-size:12px}
+.dgrid th{position:sticky;top:0;background:var(--acc-s);padding:3px;white-space:nowrap;z-index:1}
+.card .dgrid th input[type=text]{font-weight:700;width:104px;border:1px solid transparent;background:transparent;border-radius:6px;padding:3px 5px}
+.dgrid td{padding:0;border-top:1px solid var(--line2)}
+.card .dgrid td input[type=text]{width:104px;border:0;background:transparent;padding:4px 6px;font:12px var(--mono);border-radius:0}
+.card .dgrid td input[type=text]:focus{background:#fff;outline:2px solid var(--acc-m);outline-offset:-2px}
+.dgrid .x{padding:0 3px}
+.dstats{border-collapse:collapse;font-size:13px;width:100%}
+.dstats th{text-align:left;background:var(--acc-s);padding:5px 10px;font-size:12px}
+.dstats td{padding:5px 10px;border-top:1px solid var(--line2)}
+.dplot{width:100%;max-width:640px;height:auto}
+.dp-ax{stroke:#8b91a8;stroke-width:1.4}
+.dp-grid{stroke:var(--line2);stroke-width:1}
+.dp-t{font:11px system-ui,sans-serif;fill:var(--soft)}
+.dp-n{fill:var(--mute);font-size:10px}
+.dp-dot{fill-opacity:.8;stroke:#fff;stroke-width:.8}
+.dp-mean{stroke:var(--ink);stroke-width:2.4;stroke-linecap:round}
+.dp-sd{stroke:var(--ink);stroke-width:1.6;stroke-linecap:round}
+.figrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.figimgbox{width:300px;max-width:100%;flex-shrink:0;border:1px dashed #b5bad3;border-radius:10px;background:#f6f7fb;min-height:140px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.figimg{width:100%;height:auto;display:block}
+.figph{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--mute);font-size:30px}
+.figph span{font-size:12px}
+.legendbox{background:#fffdf3;border:1px solid #efe6bd;border-radius:10px;padding:10px 14px;font-size:13px;line-height:1.55}
+textarea.mono{font:12px/1.5 var(--mono)}
+@media print{
+  #print pre.macro{white-space:pre-wrap;font:8pt/1.4 var(--mono);background:#f6f7fb;border:.5pt solid #c9cde0;padding:4pt 6pt;margin:2pt 0}
+  #print .figp{margin:4pt 0}
+  #print .figp img{max-height:260pt}
+  #print .figlegend{font-size:9.5pt;border-left:3pt solid var(--acc-m);padding:2pt 8pt}
+  #print .dpp svg{width:100%;max-width:400pt;height:auto}
+  #print .dp-t{font-size:9px}
+  #print table.t pre{margin:0}
+}

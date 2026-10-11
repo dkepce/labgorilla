@@ -36,7 +36,11 @@
       pl.wells = Array.from({ length: 24 }, (_, i) => (i % 6 < 2 ? "k1" : i % 6 < 4 ? "k2" : "k3"));
       const tl = LB.newCard("timeline"); tl.events = [{ day: 0, kind: "seed", label: "Load spheroids", done: true }, { day: 1, kind: "drug", label: "Start doxorubicin", done: false }, { day: 2, kind: "medium", label: "Refresh medium", done: false }, { day: 4, kind: "image", label: "Live/dead imaging", done: false }];
       const fl = LB.newCard("flow"); Object.assign(fl, { chip: "C7", rate: "0.5", dur: "24", medium: "DMEM + 10% FBS" });
-      cur.extra = [tl, fl, pl];
+      const ij = Object.assign(LB.newCard("imagej"), { input: "C7_day4_*.tif, 20 images", scale: "0.645 µm / pixel", channels: "calcein, PI", thr: "Otsu", measure: "Area, Feret's diameter", steps: "Gaussian blur σ = 2 → threshold → Analyze Particles (size 50–∞ µm²)", macro: ['run("Set Scale...", "distance=1 known=0.645 unit=um");', 'setAutoThreshold("Otsu dark");', 'run("Analyze Particles...", "size=50-Infinity display");'].join("\n") });
+      const dt = Object.assign(LB.newCard("data"), { title: "Spheroid diameter (µm)", src: "example", groupBy: "0", cols: ["Treatment", "Diameter (µm)"], rows: [["Vehicle", "182"], ["Vehicle", "176"], ["Vehicle", "190"], ["Dox 1 µM", "151"], ["Dox 1 µM", "148"], ["Dox 1 µM", "160"], ["Dox 10 µM", "101"], ["Dox 10 µM", "95"], ["Dox 10 µM", "110"]] });
+      const fg = Object.assign(LB.newCard("figure"), { fig: "Figure 1B", desc: "Doxorubicin reduces spheroid diameter after 72 h", n: "3", test: "one-way ANOVA with Dunnett's test", sig: "* p < 0.05, ** p < 0.01" });
+      const rw = Object.assign(LB.newCard("rawdata"), { inst: "Zeiss LSM 980", obj: "10× / 0.3 NA", chan: "488 nm, 561 nm", format: "CZI (Zeiss)", size: "48 files, 12 GB", path: ["D:", "Microscopy", "2026-10-12", "C7"].join("\\") });
+      cur.extra = [tl, fl, pl, ij, dt, fg, rw];
       cur.steps.forEach(s => { if (!s.done && !s.min) { s.min = 5; } });
     }
     mk(e6, 0, { title: "Syringe pump flow calibration", date: U.add(t, -9), locked: true, aim: "Compare set flow rate with measured outlet volume.", hyp: "Deviation stays below 5% down to 0.1 µL/min.", results: "Within 3% from 0.5 µL/min; 9% at 0.1 µL/min.", concl: "Use 0.5 µL/min or higher.", steps: steps(["Collect outlet for 30 min per rate"], 1), mats: m([pbs]) });
