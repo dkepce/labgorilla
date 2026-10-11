@@ -104,6 +104,9 @@ button.ph:hover:not(:disabled){background:var(--acc-s);color:var(--acc-d)}
 @keyframes tmrpulse{50%{opacity:.6}}
 .tplay{color:var(--acc)!important;font-size:13px!important}
 
+/* top-bar logo */
+.brand .logo{width:28px;height:28px;border-radius:7px;display:block}
+
 /* PDF */
 @media print{
   #print table.g{border-collapse:separate;border-spacing:2pt;margin:3pt 0}

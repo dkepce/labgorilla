@@ -64,7 +64,7 @@
   LB.refById = id => LB.allRefs().find(r => r.id === id);
 
   /* ---------- top bar ---------- */
-  const LOGO = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/></svg>';
+  const LOGO = '<img class="logo" src="icons/logo-bar.png" width="28" height="28" alt="" aria-hidden="true">';
   function fileChip() {
     const F = LB.file;
     const m = { ok: ["✓ Saved to LabGorilla.lbk", ""], saving: ["Saving…", ""], needs: ["⚠ Reconnect file", "warn"], error: ["⚠ File problem", "warn"], none: ["Saved in this browser", ""], local: ["Saved in this browser", ""] };
