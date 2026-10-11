@@ -12,15 +12,15 @@
     const D = LB.D, q = (LB.tmp.protoQ || "").trim().toLowerCase(), cur = curId();
     const ids = Object.keys(D.protocols).filter(id => (D.protocols[id].title + " " + D.protocols[id].desc).toLowerCase().includes(q)).sort((a, b) => D.protocols[a].title.localeCompare(D.protocols[b].title));
     return '<aside class="plist" data-scroll="plist"><input type="text" placeholder="Search protocols…" aria-label="Search protocols" data-b="tmp.protoQ" data-rin="1" value="' + esc(LB.tmp.protoQ) + '" autocomplete="off">' +
-      ids.map(id => { const p = D.protocols[id]; return '<button class="pitem' + (id === cur ? " on" : "") + '" data-a="protoPick" data-id="' + id + '"><b>' + esc(p.title) + '</b><span class="muted sm">v' + p.ver + " · " + p.steps.length + " steps · used in " + usedBy(id).length + "</span></button>"; }).join("") +
+      LB.grouped("proto", ids, id => { const p = D.protocols[id]; return '<button class="pitem' + (id === cur ? " on" : "") + '" data-a="protoPick" data-id="' + id + '"' + LB.dragAttrs("proto", id) + '><b>' + esc(p.title) + '</b><span class="muted sm">v' + p.ver + " · " + p.steps.length + " steps · used in " + usedBy(id).length + "</span></button>"; }, !q, id => D.protocols[id].folder || "") +
       (ids.length ? "" : '<div class="muted sm">No protocols found.</div>') +
-      '<button class="btn" style="border-style:dashed;color:var(--acc-d)" data-a="newProto">+ New protocol</button></aside>';
+      '<button class="btn" style="border-style:dashed;color:var(--acc-d)" data-a="newProto">+ New protocol</button>' + LB.folderButton("proto") + "</aside>";
   }
   function page() {
     const D = LB.D, id = curId(), p = D.protocols[id];
     if (!p) return '<div class="page"><div class="empty"><div class="h" style="font-size:20px">No protocols yet</div><div>Write a protocol once, then start experiments from it whenever you need it.</div><button class="btn pri" data-a="newProto">+ New protocol</button></div></div>';
     const P = "D.protocols." + id, used = usedBy(id);
-    return '<div class="page" data-scroll="page"><div class="row"><input type="text" class="etitle grow" aria-label="Protocol title" data-b="' + P + '.title" data-live="' + P + '.title" value="' + esc(p.title) + '" autocomplete="off"><span class="badge acc mono">v' + p.ver + '</span>' +
+    return '<div class="page" data-scroll="page"><div class="row"><input type="text" class="etitle grow" aria-label="Protocol title" data-b="' + P + '.title" data-live="' + P + '.title" value="' + esc(p.title) + '" autocomplete="off"><span class="badge acc mono">v' + p.ver + '</span>' + LB.folderSelect("proto", p, id) +
       '<button class="btn" data-a="protoSave">Save as new version</button><button class="btn pri" data-a="protoStart">Start experiment from this</button></div>' +
       '<div class="card"><h3>Description</h3><textarea rows="2" aria-label="Description" placeholder="What is this protocol for?" data-b="' + P + '.desc">' + esc(p.desc) + "</textarea></div>" +
       '<div class="card"><h3>Steps</h3>' + p.steps.map((s, i) => '<div class="row" style="gap:8px"><span class="snum">' + (i + 1) + '</span><input type="text" class="grow" aria-label="Step ' + (i + 1) + '" data-b="' + P + ".steps." + i + '" value="' + esc(s) + '" autocomplete="off"><button class="x" data-a="protoUp" data-i="' + i + '" aria-label="Move up">↑</button><button class="x" data-a="protoDown" data-i="' + i + '" aria-label="Move down">↓</button><button class="x" data-a="protoRm" data-i="' + i + '" aria-label="Remove step">×</button></div>').join("") +

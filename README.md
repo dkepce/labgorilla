@@ -23,6 +23,7 @@ Open http://localhost:8123 in Chrome/Edge/Brave (the install/offline parts need 
 | `js/items.js` | pieces shared by Notebook and Inventory (attachments, supplier details, new material) |
 | `js/notebook.js` `protocols.js` `inventory.js` `calendar.js` | the four tabs |
 | `js/cards.js`, `cards.css` | Procedure tab: card picker, plate map, timeline, flow path, freezer box, dilution series, gel lanes (stored per entry in `entry.extra`), step timers, progress ring |
+| `js/folders.js` | one level of folders for protocols and inventory (`data.folders.proto` / `.item`, items point at one with `.folder`), drag and drop, moving experiments between projects |
 | `js/seed.js` | example data |
 | `sw.js`, `manifest.webmanifest`, `icons/` | offline + install |
 

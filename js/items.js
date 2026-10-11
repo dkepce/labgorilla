@@ -67,7 +67,7 @@
       '<div class="row wrap"><label class="grow" style="min-width:160px"><span class="lbl">Name</span><br><input type="text" style="width:100%" data-b="' + P + '.name" value="' + esc(it.name) + '"></label>' +
       '<label><span class="lbl">Type</span><br><select data-b="' + P + '.kind" data-render="1">' + LB.D.types.map(t => '<option' + (t === it.kind ? " selected" : "") + ">" + esc(t) + "</option>").join("") + "</select></label>" +
       '<label><span class="lbl">Expires</span><br><input type="date" aria-label="Expiry date" data-b="' + P + '.expires" data-render="1" value="' + esc(it.expires) + '"></label>' +
-      '<div style="align-self:flex-end;padding-bottom:6px">' + LB.expBadge(it) + "</div></div>" +
+      LB.folderSelect("item", it, it.id) + '<div style="align-self:flex-end;padding-bottom:6px">' + LB.expBadge(it) + "</div></div>" +
       '<label><span class="lbl">Details (lot, passage, storage place…)</span><br><input type="text" style="width:100%" data-b="' + P + '.sub" value="' + esc(it.sub) + '"></label>' +
       '<div class="lbl" style="margin-top:4px">Suppliers &amp; prices (optional)</div>' +
       (it.firms.length ? it.firms.map((f, j) => '<div class="firm"><input type="text" aria-label="Firm" placeholder="Firm" data-b="' + P + ".firms." + j + '.name" value="' + esc(f.name) + '"><input type="text" aria-label="Price" placeholder="Price, e.g. € 148 / 100 mg" data-b="' + P + ".firms." + j + '.price" value="' + esc(f.price) + '"><input type="text" aria-label="Order link" placeholder="Link to order page" data-b="' + P + ".firms." + j + '.link" value="' + esc(f.link) + '">' +

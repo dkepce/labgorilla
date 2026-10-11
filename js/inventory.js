@@ -24,13 +24,13 @@
     return '<div class="page" data-scroll="page"><div class="row"><h1 class="grow" style="margin:0;font-size:26px;letter-spacing:-.01em">Inventory</h1>' +
       '<input type="text" placeholder="Search inventory…" aria-label="Search inventory" data-b="tmp.invQ" data-rin="1" value="' + esc(LB.tmp.invQ) + '" style="width:220px" autocomplete="off"><button class="btn pri" data-a="toggleNewMat">+ New material</button></div>' +
       (LB.tmp.showNewMat ? LB.newMatForm("inv") : "") + expiryBanner() +
-      '<div class="types">' + chips.join("") + '<input type="text" placeholder="+ new type, Enter" aria-label="Create a new type" data-b="tmp.newType" data-enter="addType" value="' + esc(LB.tmp.newType || "") + '" style="width:150px;border-style:dashed;border-radius:99px;padding:5px 12px" autocomplete="off"></div>' +
-      (rows.map(it => {
+      '<div class="types">' + chips.join("") + '<input type="text" placeholder="+ new type, Enter" aria-label="Create a new type" data-b="tmp.newType" data-enter="addType" value="' + esc(LB.tmp.newType || "") + '" style="width:150px;border-style:dashed;border-radius:99px;padding:5px 12px" autocomplete="off"><span class="grow"></span>' + LB.folderButton("item") + "</div>" +
+      (LB.grouped("item", rows, it => {
         const i = D.items.indexOf(it);
-        return '<div class="item"><div class="invrow"><div class="n"><b data-live="D.items.' + i + '.name">' + esc(it.name) + '</b><div class="muted sm">' + esc(it.sub) + "</div>" + LB.expBadge(it) + '</div><span class="kind" style="width:78px">' + esc(it.kind) + '</span><input type="text" placeholder="stock on hand" aria-label="Stock on hand" data-b="D.items.' + i + '.stock" value="' + esc(it.stock) + '"><div class="f">' + esc(firmText(it)) + '</div><span class="muted sm" style="width:70px">used in ' + usedIn(it.id) + '</span>' +
+        return '<div class="item"><div class="invrow">' + LB.dragHandle("item", it.id) + '<div class="n"><b data-live="D.items.' + i + '.name">' + esc(it.name) + '</b><div class="muted sm">' + esc(it.sub) + "</div>" + LB.expBadge(it) + '</div><span class="kind" style="width:78px">' + esc(it.kind) + '</span><input type="text" placeholder="stock on hand" aria-label="Stock on hand" data-b="D.items.' + i + '.stock" value="' + esc(it.stock) + '"><div class="f">' + esc(firmText(it)) + '</div><span class="muted sm" style="width:70px">used in ' + usedIn(it.id) + '</span>' +
           '<button class="btn sm' + (it.reorder ? " on" : "") + '" style="' + (it.reorder ? "background:var(--acc-s);color:var(--acc-d)" : "") + '" data-a="reorder" data-id="' + it.id + '">' + (it.reorder ? "On order list ✓" : "Add to order list") + '</button><button class="btn sm" data-a="toggleItem" data-id="' + it.id + '">' + (LB.tmp.openItem === it.id ? "Hide details" : "Details") + "</button></div>" +
           (LB.tmp.openItem === it.id ? LB.itemDetails(it) : "") + "</div>";
-      }).join("") || '<div class="muted" style="padding:10px 2px">' + (D.items.length ? "Nothing matches. Try another type or search." : "Your inventory is empty. Add the first item with “+ New material”.") + "</div>") + "</div>";
+      }, !q && !t) || '<div class="muted" style="padding:10px 2px">' + (D.items.length ? "Nothing matches. Try another type or search." : "Your inventory is empty. Add the first item with “+ New material”.") + "</div>") + "</div>";
   }
   function order() {
     const list = LB.D.items.filter(i => i.reorder);
