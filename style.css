@@ -43,6 +43,7 @@ a{color:var(--acc-d)}
 .side{width:268px;flex-shrink:0;background:#fff;border-right:1px solid var(--line);padding:14px 12px;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
 .main{flex-grow:1;min-width:0;padding:18px 24px 0;display:flex;flex-direction:column;gap:12px;overflow:hidden}
 .mscroll{flex-grow:1;min-height:0;overflow-y:auto;padding-bottom:24px;display:flex;flex-direction:column;gap:14px}
+.page>*,.mscroll>*{flex-shrink:0}
 .page{flex-grow:1;min-width:0;overflow-y:auto;padding:22px 28px;display:flex;flex-direction:column;gap:14px}
 .right{width:290px;flex-shrink:0;background:#fff;border-left:1px solid var(--line);padding:14px 16px;display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto}
 
@@ -57,7 +58,7 @@ a{color:var(--acc-d)}
 .link.sm{font-size:12px}
 .x{border:0;background:transparent;color:#aab0c6;font-size:17px;line-height:1;padding:0 4px}
 .x:hover{color:#d33}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;flex-shrink:0}
 .card>h3,.h{margin:0;font-size:15px;font-weight:700}
 .lbl{font-size:12px;font-weight:600;color:var(--mute);letter-spacing:.06em;text-transform:uppercase}
 .in,.card textarea,.card input[type=text],.card input[type=date],.card select,.page input[type=text],.page select,.page input[type=date],.side input[type=text],.right input[type=text],.modal input[type=text],.modal input[type=date],.modal select,.pop input[type=text]{border:1px solid #d6d9e6;border-radius:8px;padding:8px 10px;background:#fff;min-width:0}
@@ -141,7 +142,7 @@ button.exp:hover{filter:brightness(.96)}
 .drop:hover,.dz-over{background:var(--acc-s);border-color:var(--acc)}
 
 /* items (materials & inventory) */
-.item{border:1px solid #e3e5ee;border-radius:10px;background:#fff;overflow:hidden}
+.item{border:1px solid #e3e5ee;border-radius:10px;background:#fff;overflow:hidden;flex-shrink:0}
 .item.on{background:var(--acc-s)}
 .item-h{display:flex;gap:12px;align-items:center;padding:10px 14px}
 .item-h input[type=checkbox]{width:16px;height:16px;margin:0;accent-color:var(--acc)}
