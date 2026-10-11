@@ -104,6 +104,25 @@ button.ph:hover:not(:disabled){background:var(--acc-s);color:var(--acc-d)}
 @keyframes tmrpulse{50%{opacity:.6}}
 .tplay{color:var(--acc)!important;font-size:13px!important}
 
+/* "+ Tabs" button and menu above an entry */
+.addwrap{position:relative;display:inline-block}
+.pill.add{border-style:dashed;border-color:var(--acc-m);color:var(--acc-d);background:transparent}
+.pill.add:hover,.pill.add.on{background:var(--acc-s);border-style:solid}
+.tabmenu{position:absolute;z-index:30;top:calc(100% + 8px);right:0;width:370px;max-width:88vw;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 36px rgba(27,32,48,.22);padding:14px 12px 10px;display:flex;flex-direction:column;gap:4px}
+.tabmenu .h{padding:0 6px}
+.tabmenu>.muted{padding:0 6px 6px}
+.tabopt{display:flex;gap:14px;align-items:center;padding:8px 6px;border-radius:10px;cursor:pointer}
+.tabopt:hover:not(.fixed){background:var(--acc-s)}
+.tabopt.fixed{opacity:.65;cursor:default}
+.tabopt b{display:block;font-size:14px}
+.tabopt .muted{display:block;line-height:1.35}
+input.tg{appearance:none;-webkit-appearance:none;flex-shrink:0;width:38px;height:22px;border-radius:99px;background:#cfd3e6;position:relative;margin:0;cursor:pointer;transition:background .15s}
+input.tg::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}
+input.tg:checked{background:var(--acc)}
+input.tg:checked::after{transform:translateX(16px)}
+input.tg:disabled{cursor:default}
+@media (prefers-reduced-motion:reduce){input.tg,input.tg::after{transition:none}}
+
 /* top-bar logo */
 .brand .logo{width:28px;height:28px;border-radius:7px;display:block}
 

@@ -49,12 +49,21 @@
       '<button class="btn" style="margin-top:4px" data-a="exportPdf">Export PDF</button><button class="btn dark" style="margin-top:4px" data-a="toggleLock">' + (e.locked ? "Unlock" : "Sign &amp; lock") + "</button></div>";
   }
   /* cards an entry can switch off (data is kept; they are just hidden and left out of the PDF) */
-  const CARDS = [["materials", "Materials"]];   // the Procedure tab's own cards are switched on and off there
-  const cardsOf = e => (e.cards = Object.assign({ materials: true, procedure: true, chip: true }, e.cards));
+  /* e.cards: which tabs an entry uses (materials, tabProcedure, tabResults, tabConclusion) and which cards sit on the
+     Procedure tab (procedure steps, chip map). Switching something off only hides it; the data is kept. */
+  const cardsOf = e => (e.cards = Object.assign({ materials: true, procedure: true, chip: true, tabProcedure: true, tabResults: true, tabConclusion: true }, e.cards));
   LB.cardsOf = cardsOf;
-  const visSecs = e => { const c = cardsOf(e); return [0, c.materials ? 1 : -1, 2, 3, 4].filter(i => i >= 0); };
+  const TABKEY = [null, "materials", "tabProcedure", "tabResults", "tabConclusion"];
+  const TABINFO = [["Overview", "Aim, hypothesis and references. Always on."], ["Materials", "Tick the items you used from your inventory."], ["Procedure", "Steps, chip map, plate maps, timeline and other lab cards."], ["Results", "Images, files and observations."], ["Conclusion", "What you learned and what happens next."]];
+  const visSecs = e => { const c = cardsOf(e); return [0, 1, 2, 3, 4].filter(i => i === 0 || c[TABKEY[i]]); };
+  function tabMenu(e) {
+    const c = cardsOf(e);
+    return '<div class="tabmenu"><div class="h">Tabs in this entry</div><div class="muted sm">' + (e.locked ? "Unlock the entry to change its tabs." : "Switch off what this experiment does not need. Nothing is deleted.") + "</div>" +
+      TABINFO.map(([n, d], i) => '<label class="tabopt' + (i === 0 ? " fixed" : "") + '"><span class="grow"><b>' + n + '</b><span class="muted sm">' + d + '</span></span><input type="checkbox" class="tg" ' + (i === 0 || c[TABKEY[i]] ? "checked" : "") + " " + (i === 0 || e.locked ? "disabled" : 'data-a="toggleTab" data-k="' + TABKEY[i] + '"') + ' aria-label="' + n + ' tab"></label>').join("") + "</div>";
+  }
   function secBar(e) {
-    return '<div class="secs">' + visSecs(e).map((i, k) => '<button class="pill' + (LB.ui.sec === i ? " on" : "") + '" data-a="setSec" data-n="' + i + '">' + (k + 1) + " " + SEC[i] + (e.sn[i] ? " •" : "") + "</button>").join("") + "</div>";
+    return '<div class="secs">' + visSecs(e).map((i, k) => '<button class="pill' + (LB.ui.sec === i ? " on" : "") + '" data-a="setSec" data-n="' + i + '">' + (k + 1) + " " + SEC[i] + (e.sn[i] ? " •" : "") + "</button>").join("") +
+      '<span class="addwrap"><button class="pill add' + (LB.tmp.tabMenu ? " on" : "") + '" data-a="tabMenu" title="Choose which tabs this entry uses" aria-haspopup="true" aria-expanded="' + (LB.tmp.tabMenu ? "true" : "false") + '">＋ Tabs</button>' + (LB.tmp.tabMenu ? tabMenu(e) : "") + "</span></div>";
   }
   function overview(e) {
     const P = "D.entries." + e.id, dis = e.locked ? "disabled" : "", x = LB.expOf(e), cd = cardsOf(e);
@@ -63,13 +72,10 @@
       '<div class="lbl">Hypothesis</div>' + T(2, e.hyp, 'aria-label="Hypothesis" data-b="' + P + '.hyp" data-log="Edited hypothesis" ' + dis) +
       '<div class="kv"><span class="muted">Experiment</span><b>' + (x ? LB.expCode(x) + " · " + esc(x.name) : "–") + '</b><span class="muted">Protocol</span><b>' + (e.protocol ? esc(e.protocol.title) + " v" + e.protocol.ver : "none") + "</b>" +
       (cd.materials ? '<span class="muted">Linked materials</span><b>' + e.mats.length + " items</b>" : "") +
-      (cd.procedure ? '<span class="muted">Procedure</span><b>' + e.steps.filter(s => s.done).length + " of " + e.steps.length + " steps done</b>" : "") +
-      (cd.chip ? '<span class="muted">Chip positions</span><b>' + loaded + " of " + e.map.cells.length + " loaded</b>" : "") +
-      (LB.cardCount(e) ? '<span class="muted">Lab cards</span><b>' + LB.cardCount(e) + " added</b>" : "") +
+      (cd.tabProcedure && cd.procedure ? '<span class="muted">Procedure</span><b>' + e.steps.filter(s => s.done).length + " of " + e.steps.length + " steps done</b>" : "") +
+      (cd.tabProcedure && cd.chip ? '<span class="muted">Chip positions</span><b>' + loaded + " of " + e.map.cells.length + " loaded</b>" : "") +
+      (cd.tabProcedure && LB.cardCount(e) ? '<span class="muted">Lab cards</span><b>' + LB.cardCount(e) + " added</b>" : "") +
       '<span class="muted">Files</span><b>' + e.files.length + " attached</b></div>" +
-      '<div class="lbl">Cards in this entry</div><div class="row wrap" style="gap:16px">' +
-      CARDS.map(([k, l]) => '<label class="row sm" style="gap:6px"><input type="checkbox" data-b="' + P + ".cards." + k + '" data-render="1" data-log="Changed which cards are used" ' + (cd[k] ? "checked" : "") + " " + dis + ' style="accent-color:var(--acc);margin:0">' + l + "</label>").join("") +
-      '<span class="muted sm">' + (e.locked ? "Unlock the entry to change which cards are used." : "Switch off Materials if this experiment does not need it. Procedure steps, the chip map and other lab cards are managed on the Procedure tab. Nothing is deleted.") + "</span></div>" +
       '<div class="row"><button class="link sm" style="color:#b42318" data-a="delEntry">Delete this entry</button></div></div>';
   }
   function materials(e) {
@@ -148,7 +154,7 @@
         const it = D.items.find(i => i.id === m.id); if (!it) return "";
         const u = []; if (m.used) u.push("used " + m.used + " " + m.unit); if (m.left) u.push(m.left + " " + m.unit + " left");
         return '<div class="lin"><div class="n"><b>' + esc(it.name) + '</b><div class="s">' + esc(it.sub) + "</div>" + LB.expBadge(it) + (u.length ? '<div class="u">' + esc(u.join(" · ")) + "</div>" : "") + '</div><button class="x" data-a="toggleMat" data-id="' + it.id + '" aria-label="Unlink" ' + (e.locked ? "disabled" : "") + ">×</button></div>";
-      }).join("") + '<button class="link sm" data-a="setSec" data-n="1">+ link or add a material</button>';
+      }).join("") + (cardsOf(e).materials ? '<button class="link sm" data-a="setSec" data-n="1">+ link or add a material</button>' : "");
     } else if (tab === 1) {
       body = e.comments.map(c => '<div class="lin" style="flex-direction:column;gap:2px"><div class="sm" style="color:var(--acc-d);font-weight:600">' + esc(c.who) + ' <span class="muted" style="font-weight:400">· ' + U.stampStr(c.at) + '</span></div><div style="font-size:13px;line-height:1.5;white-space:pre-wrap">' + esc(c.text) + "</div></div>").join("") +
         (e.comments.length ? "" : '<div class="muted sm">No comments yet. Comments stay possible after an entry is locked.</div>') +
@@ -195,6 +201,13 @@
   A.palette = el => { LB.tmp.palOpen = LB.tmp.palOpen === el.dataset.i ? null : el.dataset.i; LB.render(); };
   A.setColor = el => paint(el.dataset.i, el.dataset.c);
   A.customColor = el => { if (el.value) paint(el.dataset.i, el.value); };
+  A.tabMenu = () => { LB.tmp.tabMenu = !LB.tmp.tabMenu; LB.render(); };
+  A.toggleTab = el => {
+    const e = entryOK(); if (!e) return; const c = cardsOf(e), k = el.dataset.k; c[k] = !c[k];
+    LB.log(e, (c[k] ? "Added the " : "Hid the ") + k.replace(/^tab/, "").toLowerCase() + " tab"); LB.save(); LB.render();
+  };
+  document.addEventListener("click", ev => { if (LB.tmp.tabMenu && !ev.target.closest(".tabmenu") && !ev.target.closest('[data-a="tabMenu"]')) { LB.tmp.tabMenu = false; LB.render(); } });
+  document.addEventListener("keydown", ev => { if (ev.key === "Escape" && LB.tmp.tabMenu) { LB.tmp.tabMenu = false; LB.render(); } });
   A.hideCard = el => { const e = entryOK(); if (!e) return; cardsOf(e)[el.dataset.card] = false; LB.log(e, "Hid a card"); LB.save(); LB.render(); };
   A.showCard = el => { const e = entryOK(); if (!e) return; cardsOf(e)[el.dataset.card] = true; LB.log(e, "Added a card back"); LB.save(); LB.render(); };
   A.mapFill = () => {
@@ -261,7 +274,15 @@
 
   /* ---------- PDF export: choose what goes in, then print dialog → Save as PDF ---------- */
   const EXPORT_ITEMS = [["aim", "Aim and hypothesis"], ["materials", "Materials"], ["procedure", "Procedure steps"], ["chip", "Chip loading map"], ["cards", "Lab cards (plate maps, timeline…)"], ["results", "Results (observations)"], ["files", "Attached images and files"], ["conclusion", "Conclusion and next steps"], ["notes", "My section notes"], ["refs", "References"], ["comments", "Comments"], ["history", "Change history"]];
-  const exportAvail = (e, k) => (k === "materials" || k === "procedure" || k === "chip" ? cardsOf(e)[k] : true);
+  const exportAvail = (e, k) => {
+    const c = cardsOf(e);
+    if (k === "materials") return c.materials;
+    if (k === "procedure" || k === "chip") return c.tabProcedure && c[k];
+    if (k === "cards") return c.tabProcedure;
+    if (k === "results" || k === "files") return c.tabResults;
+    if (k === "conclusion") return c.tabConclusion;
+    return true;
+  };
   LB.exportModal = function () {
     const e = LB.cur(); if (!e) return ""; const o = LB.ui.exportOpts;
     return '<div class="backdrop" data-a="closeModal"><div class="modal"><h2>Export PDF</h2><div class="muted sm">Choose what to include. The entry details at the top are always included.</div><div class="expgrid">' +
@@ -304,7 +325,7 @@
         (mp.note ? '<div class="tx" style="margin-top:5pt">' + esc(mp.note) + "</div>" : "") + "</section>";
     }
     if (on("cards")) h += LB.cardsPrint(e);
-    h += note("Notes (procedure)", e.sn[2]);
+    if (cd.tabProcedure) h += note("Notes (procedure)", e.sn[2]);
     if (on("results")) h += tx("Results", e.results, "long");
     if (on("files")) {
       const figs = [], others = [];
@@ -314,9 +335,9 @@
       }
       if (figs.length || others.length) h += '<section class="long"><h2>Attached files</h2>' + (figs.length ? '<div class="imgs">' + figs.join("") + "</div>" : "") + (others.length ? '<div class="small" style="margin-top:6pt">Other files: ' + others.join(", ") + "</div>" : "") + "</section>";
     }
-    h += note("Notes (results)", e.sn[3]);
+    if (cd.tabResults) h += note("Notes (results)", e.sn[3]);
     if (on("conclusion")) h += tx("Conclusion &amp; next steps", e.concl);
-    h += note("Notes (conclusion)", e.sn[4]);
+    if (cd.tabConclusion) h += note("Notes (conclusion)", e.sn[4]);
     if (on("refs")) h += LB.refsPrint(e);
     if (on("comments") && e.comments.length) h += '<section class="long rec"><h2>Comments</h2>' + e.comments.map(c => "<div><b>" + esc(c.who) + '</b> <span class="small">' + U.stampStr(c.at) + "</span><br>" + esc(c.text) + "</div>").join("") + "</section>";
     if (on("history")) h += '<section class="long rec"><h2>Change history</h2>' + e.hist.slice().reverse().map(z => '<div class="small">' + U.stampStr(z.at) + " · " + esc(z.msg) + "</div>").join("") + "</section>";
