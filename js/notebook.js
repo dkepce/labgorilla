@@ -12,24 +12,29 @@
   /* ---------- left tree ---------- */
   function sortEntries(a, b) { return b.date.localeCompare(a.date) || (b.enteredAt || 0) - (a.enteredAt || 0); }
   function side() {
-    const D = LB.D, q = (LB.tmp.treeQ || "").trim().toLowerCase();
+    const D = LB.D, q = (LB.tmp.treeQ || "").trim().toLowerCase(), cur = LB.cur(), curX = cur && cur.expId, curP = curX && (D.experiments.find(x => x.id === curX) || {}).projectId;
+    const row = (cls, attrs, chev, ico, name, cnt, tools) => '<div class="nrow ' + cls + '"' + attrs + ' role="button" tabindex="0"><span class="chev">' + chev + '</span><span class="ico" aria-hidden="true">' + ico + '</span><span class="nm">' + name + "</span>" + (cnt != null ? '<span class="cnt">' + cnt + "</span>" : "") + (tools ? '<span class="tools">' + tools + "</span>" : "") + "</div>";
     let h = '<aside class="side" data-scroll="side"><button class="btn pri" data-a="newEntry">+ New entry</button>' +
-      '<input type="text" placeholder="Filter entries…" aria-label="Filter entries" data-b="tmp.treeQ" data-rin="1" value="' + esc(LB.tmp.treeQ) + '" autocomplete="off">';
+      '<input type="text" placeholder="Filter entries…" aria-label="Filter entries" data-b="tmp.treeQ" data-rin="1" value="' + esc(LB.tmp.treeQ) + '" autocomplete="off">' +
+      '<div class="row sm ftoolbar"><span class="lbl">Lab book</span><span class="grow"></span><button class="link sm" data-a="treeAll" data-v="1">Expand all</button><span class="muted">·</span><button class="link sm" data-a="treeAll" data-v="0">Collapse all</button></div><div class="ftree">';
     D.projects.forEach(p => {
       const exps = D.experiments.filter(x => x.projectId === p.id), pOpen = q || LB.ui.openProj[p.id] !== false;
-      let body = "";
+      let body = "", shown = 0;
       exps.forEach(x => {
-        const es = Object.values(D.entries).filter(e => e.expId === x.id && (!q || (e.title + " " + e.code + " " + e.aim).toLowerCase().includes(q))).sort(sortEntries);
+        const all = Object.values(D.entries).filter(e => e.expId === x.id), es = all.filter(e => !q || (e.title + " " + e.code + " " + e.aim).toLowerCase().includes(q)).sort(sortEntries);
         if (q && !es.length) return;
+        shown++;
         const xOpen = q || LB.ui.openExp[x.id] !== false;
-        body += '<div class="trow exp" data-a="toggleExp" data-id="' + x.id + '"' + LB.dragAttrs("exp", x.id) + ' role="button" tabindex="0"><span>' + (xOpen ? "▾" : "▸") + '</span><span style="flex-grow:1">' + LB.expCode(x) + " · " + esc(x.name) + '</span><span class="tools"><button class="x" data-a="newEntry" data-exp="' + x.id + '" title="New entry here">＋</button><button class="x" data-a="moveExp" data-id="' + x.id + '" title="Move to another project">⇄</button><button class="x" data-a="renameExp" data-id="' + x.id + '" title="Rename">✎</button><button class="x" data-a="delExp" data-id="' + x.id + '" title="Delete experiment">🗑</button></span></div>';
-        if (xOpen) body += es.map(e => '<button class="trow ent' + (e.id === LB.ui.cur ? " on" : "") + '" data-a="openEntry" data-id="' + e.id + '"><span class="d">' + U.fmt(e.date, false) + '</span><span data-live="D.entries.' + e.id + '.title">' + esc(e.title) + "</span></button>").join("") || '<div class="muted sm" style="padding:2px 8px 4px 26px">No entries yet</div>';
+        body += row("exp" + (x.id === curX ? " path" : ""), ' data-a="toggleExp" data-id="' + x.id + '"' + LB.dragAttrs("exp", x.id), xOpen ? "▾" : "▸", xOpen ? "📂" : "📁", LB.expCode(x) + " · " + esc(x.name), all.length,
+          '<button class="x" data-a="newEntry" data-exp="' + x.id + '" title="New entry here">＋</button><button class="x" data-a="moveExp" data-id="' + x.id + '" title="Move to another project">⇄</button><button class="x" data-a="renameExp" data-id="' + x.id + '" title="Rename">✎</button><button class="x" data-a="delExp" data-id="' + x.id + '" title="Delete experiment">🗑</button>');
+        if (xOpen) body += '<div class="fkids">' + (es.map(e => '<button class="nrow ent' + (e.id === LB.ui.cur ? " on" : "") + '" data-a="openEntry" data-id="' + e.id + '"><span class="chev"></span><span class="ico" aria-hidden="true">📄</span><span class="d">' + U.fmt(e.date, false) + '</span><span class="nm" data-live="D.entries.' + e.id + '.title">' + esc(e.title) + "</span></button>").join("") || '<div class="muted sm" style="padding:2px 8px 4px 34px">No entries yet</div>') + "</div>";
       });
-      if (q && !body) return;
-      h += '<div class="th" data-a="toggleProj" data-id="' + p.id + '" data-drop="exp:' + p.id + '"><span>' + (pOpen ? "▾ " : "▸ ") + esc(p.name) + '</span><span class="tools"><button class="x" data-a="addExp" data-id="' + p.id + '" title="New experiment">＋</button><button class="x" data-a="renameProj" data-id="' + p.id + '" title="Rename">✎</button><button class="x" data-a="delProj" data-id="' + p.id + '" title="Delete project">🗑</button></span></div>';
-      if (pOpen) h += '<div class="col" style="gap:2px">' + body + "</div>";
+      if (q && !shown) return;
+      h += row("proj" + (p.id === curP ? " path" : ""), ' data-a="toggleProj" data-id="' + p.id + '" data-drop="exp:' + p.id + '"', pOpen ? "▾" : "▸", pOpen ? "📂" : "📁", esc(p.name), exps.length,
+        '<button class="x" data-a="addExp" data-id="' + p.id + '" title="New experiment">＋</button><button class="x" data-a="renameProj" data-id="' + p.id + '" title="Rename">✎</button><button class="x" data-a="delProj" data-id="' + p.id + '" title="Delete project">🗑</button>');
+      if (pOpen) h += '<div class="fkids">' + (body || '<div class="muted sm" style="padding:2px 8px 4px 34px">No experiments yet</div>') + "</div>";
     });
-    h += '<button class="link sm" data-a="addProj" style="margin-top:6px">+ New project</button></aside>';
+    h += '</div><button class="link sm" data-a="addProj" style="margin-top:6px">📁 + New project</button></aside>';
     return h;
   }
 
@@ -173,6 +178,10 @@
   A.openEntry = el => LB.openEntry(el.dataset.id);
   A.toggleProj = el => { if (LB.tmp.treeQ) return; LB.ui.openProj[el.dataset.id] = LB.ui.openProj[el.dataset.id] === false; LB.saveUI(); LB.render(); };
   A.toggleExp = (el, ev) => { if (ev.target.closest(".tools") || LB.tmp.treeQ) return; LB.ui.openExp[el.dataset.id] = LB.ui.openExp[el.dataset.id] === false; LB.saveUI(); LB.render(); };
+  A.treeAll = el => {
+    const open = el.dataset.v === "1"; LB.D.projects.forEach(p => { LB.ui.openProj[p.id] = open; }); LB.D.experiments.forEach(x => { LB.ui.openExp[x.id] = open; });
+    LB.saveUI(); LB.render();
+  };
   A.setSec = el => { LB.ui.sec = +el.dataset.n; LB.saveUI(); LB.render(); };
   A.setTab = el => { LB.ui.tab = +el.dataset.n; LB.saveUI(); LB.render(); };
   A.entryDate = el => { const e = LB.cur(); if (!e || !el.value) return; LB.log(e, "Changed experiment date to " + U.fmt(e.date, true)); LB.save(); LB.render(); };

@@ -123,6 +123,27 @@ input.tg:checked::after{transform:translateX(16px)}
 input.tg:disabled{cursor:default}
 @media (prefers-reduced-motion:reduce){input.tg,input.tg::after{transition:none}}
 
+/* notebook folder browser (projects > experiments > entries) */
+.ftoolbar{padding:2px 4px 0}
+.ftree{display:flex;flex-direction:column;gap:1px}
+.nrow{display:flex;align-items:center;gap:6px;width:100%;text-align:left;border:0;background:transparent;border-radius:8px;padding:5px 6px;font-size:13px;color:var(--soft);cursor:pointer;min-height:30px}
+.nrow:hover{background:#f1f2f8}
+.nrow .chev{width:12px;font-size:10px;color:var(--mute);flex-shrink:0;text-align:center}
+.nrow .ico{font-size:15px;line-height:1;flex-shrink:0}
+.nrow .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nrow .cnt{font-size:11px;color:var(--mute);background:var(--line2);border-radius:99px;padding:0 7px;flex-shrink:0}
+.nrow .d{font:11px var(--mono);opacity:.7;white-space:nowrap;flex-shrink:0}
+.nrow .tools{display:none;margin-left:auto;gap:2px;flex-shrink:0}
+.nrow:hover .tools{display:inline-flex}
+.nrow:hover .cnt{display:none}
+.nrow:hover .tools+.cnt{display:none}
+.nrow.proj{font-weight:700;color:var(--ink);margin-top:2px}
+.nrow.exp{font-weight:600}
+.nrow.path .nm{color:var(--acc-d)}
+.nrow.ent{font-weight:400}
+.nrow.ent.on{background:var(--acc-s);color:var(--acc-d);font-weight:600}
+.fkids{margin-left:12px;padding-left:6px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:1px}
+
 /* folders (protocols, inventory) and drag and drop */
 .fgroup{display:flex;flex-direction:column;gap:6px}
 .fbody{display:flex;flex-direction:column;gap:8px;padding-left:12px;border-left:2px solid var(--line2);margin-left:8px}
