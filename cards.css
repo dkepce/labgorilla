@@ -227,3 +227,24 @@ textarea.mono{font:12px/1.5 var(--mono)}
 .fi{display:block;flex-shrink:0}
 .nrow .ico,.fhead .ficon{display:inline-flex;align-items:center;justify-content:center;width:20px}
 label.btn .fi,button .fi{display:inline-block;vertical-align:-3px;margin-right:2px}
+
+/* thesis tab */
+.thdrop{align-items:flex-start;border:2px dashed var(--acc-m);background:linear-gradient(135deg,var(--acc-s),#fff 70%)}
+.chaps{display:flex;flex-direction:column;gap:2px}
+.chap{border-bottom:1px solid var(--line2);padding:6px 0}
+.chap:last-child{border-bottom:0}
+.crow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cname{flex:1;min-width:160px;font-weight:600}
+.chap.lvl1 .cname{font-size:15px;font-weight:700}
+.chap.lvl2 .cname{padding-left:22px}
+.chap.lvl3 .cname{padding-left:44px;font-weight:500;font-size:13px}
+.cstatus{border:1px solid #d6d9e6;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600;background:#fff;color:var(--soft)}
+.cstatus[data-st="Drafting"]{background:#fdecc8;color:#7a4b00;border-color:#f0d9a0}
+.cstatus[data-st="Revising"]{background:#fde4ef;color:#9d174d;border-color:#f3bcd3}
+.cstatus[data-st="Done"]{background:var(--ok-bg);color:var(--ok);border-color:#b7e0c8}
+.cpanel{margin:8px 0 6px 22px;padding:10px 12px;background:#f7f8fc;border:1px solid var(--line2);border-radius:10px;display:flex;flex-direction:column;gap:8px}
+.cpanel textarea{border:1px solid #d6d9e6;border-radius:8px;padding:8px 10px;background:#fff;width:100%;font-size:13px}
+.cpanel input[type=text]{border:1px solid #d6d9e6;border-radius:8px;padding:7px 10px;background:#fff}
+.chipx{display:inline-flex;align-items:center;gap:2px;background:var(--acc-s);border:1px solid var(--acc-m);border-radius:99px;padding:0 4px 0 0}
+.chipx .chipbtn{border:0;background:transparent;max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chipx .x{padding:0 4px;font-size:14px}

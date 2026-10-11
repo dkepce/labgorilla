@@ -79,6 +79,7 @@
       (cd.materials ? '<span class="muted">Linked materials</span><b>' + e.mats.length + " items</b>" : "") +
       (cd.tabProcedure && cd.procedure ? '<span class="muted">Procedure</span><b>' + e.steps.filter(s => s.done).length + " of " + e.steps.length + " steps done</b>" : "") +
       (cd.tabProcedure && cd.chip ? '<span class="muted">Chip positions</span><b>' + loaded + " of " + e.map.cells.length + " loaded</b>" : "") +
+      ((LB.thesisFor && LB.thesisFor("entry", e.id).length) ? '<span class="muted">Thesis</span><b>' + esc(LB.thesisFor("entry", e.id).join(", ")) + "</b>" : "") +
       (cd.tabProcedure && LB.cardCount(e) ? '<span class="muted">Lab cards</span><b>' + LB.cardCount(e) + " added</b>" : "") +
       '<span class="muted">Files</span><b>' + e.files.length + " attached</b></div>" +
       '<div class="row"><button class="link sm" style="color:#b42318" data-a="delEntry">Delete this entry</button></div></div>';

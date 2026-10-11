@@ -70,6 +70,7 @@
   async function idbGet(store, k) { try { const db = await idb(); return await new Promise((res, rej) => { const q = db.transaction(store).objectStore(store).get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); } catch (e) { return null; } }
   async function idbSet(store, k, v) { try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction(store, "readwrite"); t.objectStore(store).put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); }); return true; } catch (e) { return false; } }
   async function idbDel(store, k) { try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction(store, "readwrite"); t.objectStore(store).delete(k); t.oncomplete = res; t.onerror = () => rej(t.error); }); } catch (e) { } }
+  LB.idbGet = (...a) => idbGet(...a); LB.idbSet = (...a) => idbSet(...a); LB.idbDel = (...a) => idbDel(...a);   // used by other files that remember a file handle
 
   /* ---------- LabGorilla.lbk in a folder the user picks (File System Access API) ---------- */
   const FS_OK = !!window.showDirectoryPicker;

@@ -83,7 +83,7 @@
     return '<div class="gres">' + (out.length ? out.slice(0, 14).map(r => '<button data-a="' + r.a + '" data-kind="' + r.kind + '" data-id="' + r.id + '"><span class="k">' + r.k + "</span><span>" + esc(r.t) + "</span></button>").join("") : '<div class="muted sm" style="padding:8px 10px">Nothing found.</div>') + "</div>";
   }
   function topbar() {
-    const NAV = [["notebook", "Notebook"], ["protocols", "Protocols"], ["inventory", "Inventory"], ["references", "References"], ["calendar", "Calendar"]];
+    const NAV = [["notebook", "Notebook"], ["protocols", "Protocols"], ["inventory", "Inventory"], ["references", "References"], ["thesis", "Thesis"], ["calendar", "Calendar"]];
     return '<header class="top"><div class="brand">' + LOGO + 'LabGorilla</div><nav class="nav">' +
       NAV.map(([k, l]) => '<button class="' + (LB.ui.view === k ? "on" : "") + '" data-a="nav" data-v="' + k + '">' + l + "</button>").join("") + '</nav><span class="grow"></span>' +
       '<div class="tsearch"><input type="text" placeholder="Search everything…" aria-label="Search everything" autocomplete="off" data-b="tmp.gq" data-rin="1" value="' + esc(LB.tmp.gq || "") + '">' + globalResults() + "</div>" +

@@ -27,6 +27,7 @@ Open http://localhost:8123 in Chrome/Edge/Brave (the install/offline parts need 
 | `js/folders.js` | one level of folders for protocols and inventory (`data.folders.proto` / `.item`, items point at one with `.folder`), drag and drop, moving experiments between projects |
 | `js/refs.js` | references on an entry or protocol: DOI / PubMed / link lookup, Zotero search, formatting, PDF styles |
 | `js/library.js` | References tab: all papers, folders (`data.folders.ref`), search, "cited in", `.ris` import + export, "From library" picker for entries/protocols (a paper added here has `lib: true` and is kept even when nothing cites it) |
+| `js/thesis.js` | Thesis tab: link a .docx (File System Access API, handle kept in IndexedDB; falls back to reading the file once), headings + word counts read from the XML inside the docx (only the outline is stored in `data.thesis`), chapter status, evidence links to entries / protocols / papers |
 | `js/seed.js` | example data |
 | `sw.js`, `manifest.webmanifest`, `icons/` | offline + install |
 
