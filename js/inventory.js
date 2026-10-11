@@ -5,21 +5,32 @@
   const usedIn = id => Object.values(LB.D.entries).filter(e => e.mats.some(m => m.id === id)).length;
   const firmText = it => it.firms.map(f => [f.name, f.price].filter(Boolean).join(" · ")).filter(Boolean).join("   ") || "no suppliers yet";
 
+  /* items that are expired or expire within the warning window, most urgent first */
+  const flagged = () => LB.D.items.map(it => ({ it, x: LB.expiry(it) })).filter(r => r.x && r.x.state !== "ok").sort((a, b) => a.x.d - b.x.d);
+  function expiryBanner() {
+    const list = flagged(), nExp = list.filter(r => r.x.state === "expired").length, nSoon = list.length - nExp, w = LB.S.warnDays == null ? 30 : LB.S.warnDays;
+    const setting = 'Warn me <input type="number" min="1" max="365" aria-label="Days before expiry to warn" data-b="S.warnDays" data-t="num" data-render="1" value="' + w + '"> days before an expiry date';
+    if (!list.length) return '<div class="expbanner ok"><span>✓ Nothing expired, nothing expiring within ' + w + " days.</span><span class=\"grow\"></span><label class=\"sm\">" + setting + "</label></div>";
+    return '<div class="expbanner' + (nExp ? " bad" : "") + '"><div class="row wrap"><b>' + (nExp ? "⚠ " + nExp + " expired" : "") + (nExp && nSoon ? " · " : "") + (nSoon ? "⏳ " + nSoon + " expiring within " + w + " days" : "") + '</b><span class="grow"></span><label class="sm">' + setting + "</label></div>" +
+      '<div class="row wrap" style="gap:6px">' + list.map(r => '<button class="exp ' + r.x.state + '" data-a="gopen" data-kind="item" data-id="' + r.it.id + '" title="Open this item">' + esc(r.it.name) + " · " + r.x.txt.replace(/^Expires /, "") + "</button>").join("") + "</div></div>";
+  }
+
   function page() {
-    const D = LB.D, q = (LB.tmp.invQ || "").trim().toLowerCase(), t = LB.tmp.invType;
-    const rows = D.items.filter(i => (!t || i.kind === t) && (!q || (i.name + " " + i.sub + " " + i.kind).toLowerCase().includes(q)));
+    const D = LB.D, q = (LB.tmp.invQ || "").trim().toLowerCase(), t = LB.tmp.invType, nFlag = flagged().length;
+    const rows = D.items.filter(i => (!t || (t === "__exp" ? (LB.expiry(i) || {}).state === "soon" || (LB.expiry(i) || {}).state === "expired" : i.kind === t)) && (!q || (i.name + " " + i.sub + " " + i.kind).toLowerCase().includes(q)));
     const chips = ['<button class="pill' + (!t ? " on" : "") + '" data-a="invType" data-k="">All (' + D.items.length + ")</button>"]
+      .concat(nFlag ? ['<button class="pill' + (t === "__exp" ? " on" : "") + '" data-a="invType" data-k="__exp">⚠ Expiry (' + nFlag + ")</button>"] : [])
       .concat(D.types.map(k => '<button class="pill' + (t === k ? " on" : "") + '" data-a="invType" data-k="' + esc(k) + '">' + esc(k) + " (" + D.items.filter(i => i.kind === k).length + ")</button>"));
     return '<div class="page" data-scroll="page"><div class="row"><h1 class="grow" style="margin:0;font-size:26px;letter-spacing:-.01em">Inventory</h1>' +
-      '<input type="text" placeholder="Search inventory…" aria-label="Search inventory" data-b="tmp.invQ" data-rin="1" value="' + esc(LB.tmp.invQ) + '" style="width:220px" autocomplete="off"><button class="btn pri" data-a="toggleNewMat">+ New item</button></div>' +
-      (LB.tmp.showNewMat ? LB.newMatForm("inv") : "") +
+      '<input type="text" placeholder="Search inventory…" aria-label="Search inventory" data-b="tmp.invQ" data-rin="1" value="' + esc(LB.tmp.invQ) + '" style="width:220px" autocomplete="off"><button class="btn pri" data-a="toggleNewMat">+ New material</button></div>' +
+      (LB.tmp.showNewMat ? LB.newMatForm("inv") : "") + expiryBanner() +
       '<div class="types">' + chips.join("") + '<input type="text" placeholder="+ new type, Enter" aria-label="Create a new type" data-b="tmp.newType" data-enter="addType" value="' + esc(LB.tmp.newType || "") + '" style="width:150px;border-style:dashed;border-radius:99px;padding:5px 12px" autocomplete="off"></div>' +
       (rows.map(it => {
         const i = D.items.indexOf(it);
-        return '<div class="item"><div class="invrow"><div class="n"><b data-live="D.items.' + i + '.name">' + esc(it.name) + '</b><div class="muted sm">' + esc(it.sub) + '</div></div><span class="kind" style="width:78px">' + esc(it.kind) + '</span><input type="text" placeholder="stock on hand" aria-label="Stock on hand" data-b="D.items.' + i + '.stock" value="' + esc(it.stock) + '"><div class="f">' + esc(firmText(it)) + '</div><span class="muted sm" style="width:70px">used in ' + usedIn(it.id) + '</span>' +
+        return '<div class="item"><div class="invrow"><div class="n"><b data-live="D.items.' + i + '.name">' + esc(it.name) + '</b><div class="muted sm">' + esc(it.sub) + "</div>" + LB.expBadge(it) + '</div><span class="kind" style="width:78px">' + esc(it.kind) + '</span><input type="text" placeholder="stock on hand" aria-label="Stock on hand" data-b="D.items.' + i + '.stock" value="' + esc(it.stock) + '"><div class="f">' + esc(firmText(it)) + '</div><span class="muted sm" style="width:70px">used in ' + usedIn(it.id) + '</span>' +
           '<button class="btn sm' + (it.reorder ? " on" : "") + '" style="' + (it.reorder ? "background:var(--acc-s);color:var(--acc-d)" : "") + '" data-a="reorder" data-id="' + it.id + '">' + (it.reorder ? "On order list ✓" : "Add to order list") + '</button><button class="btn sm" data-a="toggleItem" data-id="' + it.id + '">' + (LB.tmp.openItem === it.id ? "Hide details" : "Details") + "</button></div>" +
           (LB.tmp.openItem === it.id ? LB.itemDetails(it) : "") + "</div>";
-      }).join("") || '<div class="muted" style="padding:10px 2px">' + (D.items.length ? "Nothing matches. Try another type or search." : "Your inventory is empty. Add the first item with “+ New item”.") + "</div>") + "</div>";
+      }).join("") || '<div class="muted" style="padding:10px 2px">' + (D.items.length ? "Nothing matches. Try another type or search." : "Your inventory is empty. Add the first item with “+ New material”.") + "</div>") + "</div>";
   }
   function order() {
     const list = LB.D.items.filter(i => i.reorder);

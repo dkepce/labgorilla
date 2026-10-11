@@ -45,12 +45,29 @@
     await LB.fileRemove(r); LB.save(); LB.render();
   };
 
+  /* ---------- expiry: state of a material today (ok / soon / expired) ---------- */
+  LB.expiry = function (it) {
+    if (!it.expires) return null;
+    const d = U.daysBetween(U.today(), it.expires), w = LB.S.warnDays == null ? 30 : LB.S.warnDays;
+    const state = d < 0 ? "expired" : d <= w ? "soon" : "ok";
+    const txt = d < 0 ? "Expired " + (d === -1 ? "yesterday" : -d + " days ago") : d === 0 ? "Expires today" : d === 1 ? "Expires tomorrow" : state === "soon" ? "Expires in " + d + " days" : "Expires " + U.fmt(it.expires);
+    return { d, state, txt };
+  };
+  LB.expBadge = function (it) {
+    const x = LB.expiry(it); if (!x) return "";
+    return '<span class="exp ' + x.state + '" title="Expiry date: ' + U.fmt(it.expires) + '">' + (x.state === "expired" ? "⚠ " : x.state === "soon" ? "⏳ " : "") + x.txt + "</span>";
+  };
+  /* used on an entry: was the material already past its date on the day of the experiment? */
+  LB.expiredOn = (it, day) => !!(it.expires && day && it.expires < day);
+
   /* ---------- material details (suppliers, prices, documents) ---------- */
   LB.itemDetails = function (it) {
     const i = LB.D.items.indexOf(it), P = "D.items." + i;
     return '<div class="item-det">' +
       '<div class="row wrap"><label class="grow" style="min-width:160px"><span class="lbl">Name</span><br><input type="text" style="width:100%" data-b="' + P + '.name" value="' + esc(it.name) + '"></label>' +
-      '<label><span class="lbl">Type</span><br><select data-b="' + P + '.kind" data-render="1">' + LB.D.types.map(t => '<option' + (t === it.kind ? " selected" : "") + ">" + esc(t) + "</option>").join("") + "</select></label></div>" +
+      '<label><span class="lbl">Type</span><br><select data-b="' + P + '.kind" data-render="1">' + LB.D.types.map(t => '<option' + (t === it.kind ? " selected" : "") + ">" + esc(t) + "</option>").join("") + "</select></label>" +
+      '<label><span class="lbl">Expires</span><br><input type="date" aria-label="Expiry date" data-b="' + P + '.expires" data-render="1" value="' + esc(it.expires) + '"></label>' +
+      '<div style="align-self:flex-end;padding-bottom:6px">' + LB.expBadge(it) + "</div></div>" +
       '<label><span class="lbl">Details (lot, passage, storage place…)</span><br><input type="text" style="width:100%" data-b="' + P + '.sub" value="' + esc(it.sub) + '"></label>' +
       '<div class="lbl" style="margin-top:4px">Suppliers &amp; prices (optional)</div>' +
       (it.firms.length ? it.firms.map((f, j) => '<div class="firm"><input type="text" aria-label="Firm" placeholder="Firm" data-b="' + P + ".firms." + j + '.name" value="' + esc(f.name) + '"><input type="text" aria-label="Price" placeholder="Price, e.g. € 148 / 100 mg" data-b="' + P + ".firms." + j + '.price" value="' + esc(f.price) + '"><input type="text" aria-label="Order link" placeholder="Link to order page" data-b="' + P + ".firms." + j + '.link" value="' + esc(f.link) + '">' +
@@ -80,20 +97,21 @@
       '<input type="text" class="grow" style="flex:2" aria-label="Material name" placeholder="Name, e.g. MDA-MB-231" data-b="tmp.newMat.name" data-enter="addMat" data-mode="' + mode + '" value="' + esc(nm.name) + '" autocomplete="off">' +
       '<select style="flex:1" aria-label="Type" data-b="tmp.newMat.kind" data-render="1">' + LB.D.types.map(t => '<option' + (nm.kind === t ? " selected" : "") + ">" + esc(t) + "</option>").join("") + '<option value="__new"' + (nm.kind === "__new" ? " selected" : "") + ">+ New type…</option></select>" +
       (nm.kind === "__new" ? '<input type="text" style="flex:1;border-color:var(--acc)" aria-label="New type name" placeholder="New type, e.g. plasmid" data-b="tmp.newMat.newKind" value="' + esc(nm.newKind) + '">' : "") + "</div>" +
-      '<input type="text" aria-label="Details" placeholder="Details: lot, passage, storage location…" data-b="tmp.newMat.sub" data-enter="addMat" data-mode="' + mode + '" value="' + esc(nm.sub) + '">' +
+      '<div class="row" style="gap:10px"><input type="text" class="grow" aria-label="Details" placeholder="Details: lot, passage, storage location…" data-b="tmp.newMat.sub" data-enter="addMat" data-mode="' + mode + '" value="' + esc(nm.sub) + '">' +
+      '<label class="row sm" style="gap:6px;white-space:nowrap">Expires <input type="date" aria-label="Expiry date (optional)" data-b="tmp.newMat.expires" value="' + esc(nm.expires) + '"></label></div>' +
       '<div class="row"><button class="btn pri" data-a="addMat" data-mode="' + mode + '">' + (mode === "entry" ? "Add to inventory and link" : "Add to inventory") + '</button><button class="link" data-a="toggleNewMat" style="color:var(--mute)">Cancel</button></div></div>';
   };
-  A.toggleNewMat = () => { LB.tmp.showNewMat = !LB.tmp.showNewMat; LB.tmp.newMat = { name: "", kind: LB.D.types[1] || LB.D.types[0] || "reagent", newKind: "", sub: "" }; LB.render(); };
+  A.toggleNewMat = () => { LB.tmp.showNewMat = !LB.tmp.showNewMat; LB.tmp.newMat = { name: "", kind: LB.D.types[1] || LB.D.types[0] || "reagent", newKind: "", sub: "", expires: "" }; LB.render(); };
   A.addMat = el => {
     const nm = LB.tmp.newMat, kind = nm.kind === "__new" ? nm.newKind.trim() : nm.kind;
     if (!nm.name.trim()) { LB.toast("Please give the material a name."); return; }
     if (!kind) { LB.toast("Please name the new type."); return; }
     const mode = el.dataset.mode, e = mode === "entry" ? LB.cur() : null;
     if (e && e.locked) return;
-    const it = { id: U.uid(), name: nm.name.trim(), kind, sub: nm.sub.trim(), stock: "", reorder: false, firms: [], docs: [] };
+    const it = { id: U.uid(), name: nm.name.trim(), kind, sub: nm.sub.trim(), expires: nm.expires || "", stock: "", reorder: false, firms: [], docs: [] };
     LB.D.items.push(it); if (!LB.D.types.includes(kind)) LB.D.types.push(kind);
     if (e) { e.mats.push({ id: it.id, used: "", left: "", unit: "" }); LB.log(e, "Added " + it.name + " to inventory and linked it"); }
     LB.tmp.showNewMat = false; LB.tmp.openItem = it.id; LB.save(); LB.render();
-    LB.toast(it.name + (e ? " added to the inventory and linked" : " added to the inventory"));
+    LB.toast(LB.expiredOn(it, e ? e.date : U.today()) ? "⚠ " + it.name + " is already past its expiry date (" + U.fmt(it.expires) + ")." : it.name + (e ? " added to the inventory and linked" : " added to the inventory"));
   };
 })(window.LB);

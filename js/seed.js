@@ -3,13 +3,13 @@
   const U = LB.U;
   LB.seedDemo = function () {
     const D = LB.D, t = U.today(), now = Date.now();
-    const item = (name, kind, sub, firms) => { const it = { id: U.uid(), name, kind, sub, stock: "", reorder: false, firms: firms || [], docs: [] }; D.items.push(it); return it.id; };
+    const item = (name, kind, sub, firms, expDays) => { const it = { id: U.uid(), name, kind, sub, expires: expDays == null ? "" : U.add(t, expDays), stock: "", reorder: false, firms: firms || [], docs: [] }; D.items.push(it); return it.id; };
     const mcf7 = item("MCF-7", "cell line", "P18 · freezer box 3B");
-    const col = item("Collagen I, rat tail", "reagent", "lot 220518 · 4 °C", [{ name: "Supplier A", price: "€ 148 / 100 mg", link: "https://example.com/collagen" }, { name: "Supplier B", price: "€ 131 / 100 mg", link: "" }]);
-    const dmem = item("DMEM + 10% FBS", "medium", "opened 02 Oct · use by 16 Oct");
+    const col = item("Collagen I, rat tail", "reagent", "lot 220518 · 4 °C", [{ name: "Supplier A", price: "€ 148 / 100 mg", link: "https://example.com/collagen" }, { name: "Supplier B", price: "€ 131 / 100 mg", link: "" }], 200);
+    const dmem = item("DMEM + 10% FBS", "medium", "opened 02 Oct · use by 16 Oct", [], 5);
     const pbs = item("PBS, sterile", "reagent", "lot 0911 · room temperature");
     const chip = item("Chip batch C7", "chips", "PDMS · bonded");
-    item("Doxorubicin 10 mM", "drug", "−20 °C · aliquot 3");
+    item("Doxorubicin 10 mM", "drug", "−20 °C · aliquot 3", [], -3);
     const proto = (title, desc, steps, mats, hist) => { const id = U.uid(); D.protocols[id] = { title, ver: hist.length, desc, steps, mats, history: hist.map((n, i) => ({ v: hist.length - i, note: n, at: now })) }; return id; };
     const pSph = proto("Spheroid loading into perfusion chip", "Load pre-formed spheroids into the culture chamber of a PDMS perfusion chip and start low-flow perfusion.",
       ["Prime channels with PBS, 5 min", "Coat chamber with collagen I, 30 min", "Collect spheroids and wash in medium", "Load 8 spheroids per chip at 2 µL/min", "Start perfusion at 0.5 µL/min and image at 0 h"], [mcf7, col, dmem, pbs, chip], ["Added collagen coating step", "Lowered loading flow rate to 2 µL/min", "First version"]);

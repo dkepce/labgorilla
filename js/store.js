@@ -3,7 +3,7 @@
   const U = LB.U;
 
   /* ---------- defaults & loading ---------- */
-  const DEFAULT_S = { theme: "indigo" };
+  const DEFAULT_S = { theme: "indigo", warnDays: 30 };
   const DEFAULT_UI = { view: "notebook", cur: "", sec: 0, tab: 0, calMode: "month", sel: "", openExp: {}, openProj: {}, exportOpts: { aim: true, materials: true, procedure: true, chip: true, results: true, files: true, conclusion: true, notes: true, comments: true, history: true, refs: true } };
   const TYPES = ["cell line", "reagent", "medium", "chips", "drug", "antibody"];
   const SECTIONS = ["Overview", "Materials", "Procedure", "Results", "Conclusion"];
@@ -15,7 +15,7 @@
   LB.ui = Object.assign({}, DEFAULT_UI, load("labbook.ui", null) || {});
   LB.ui.sel = LB.ui.sel || U.today();
   LB.ui.exportOpts = Object.assign({}, DEFAULT_UI.exportOpts, LB.ui.exportOpts);
-  LB.tmp = { treeQ: "", protoQ: "", invQ: "", invType: "", openItem: "", protoCur: "", showNewMat: false, newMat: { name: "", kind: "reagent", newKind: "", sub: "" }, evTitle: "", evTime: "", evKind: "imaging", comment: "", toast: "" };
+  LB.tmp = { treeQ: "", protoQ: "", invQ: "", invType: "", openItem: "", protoCur: "", showNewMat: false, newMat: { name: "", kind: "reagent", newKind: "", sub: "", expires: "" }, evTitle: "", evTime: "", evKind: "imaging", comment: "", toast: "" };
 
   LB.fixData = function () {
     const D = LB.D;
@@ -28,7 +28,7 @@
       ["aim", "hyp", "results", "concl"].forEach(k => { e[k] = e[k] || ""; });
     });
     Object.values(D.protocols).forEach(p => { p.steps = p.steps || []; p.refs = p.refs || []; p.mats = p.mats || []; p.history = p.history || []; p.ver = p.ver || 1; p.desc = p.desc || ""; });
-    D.items.forEach(i => { i.firms = i.firms || []; i.docs = i.docs || []; i.stock = i.stock || ""; i.sub = i.sub || ""; });
+    D.items.forEach(i => { i.firms = i.firms || []; i.docs = i.docs || []; i.stock = i.stock || ""; i.sub = i.sub || ""; i.expires = i.expires || ""; });
   };
   LB.newMap = (rows = 2, cols = 4) => ({ rows, cols, cells: Array.from({ length: rows * cols }, () => ({ on: false, note: "" })) });
   LB.fixData();

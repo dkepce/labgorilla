@@ -79,7 +79,8 @@
       (LB.tmp.showNewMat ? LB.newMatForm("entry") : "") +
       (items.length ? items.map(it => {
         const k = e.mats.findIndex(m => m.id === it.id), on = k >= 0, m = on ? e.mats[k] : null, i = D.items.indexOf(it), PM = "D.entries." + e.id + ".mats." + k;
-        return '<div class="item' + (on ? " on" : "") + '"><div class="item-h"><input type="checkbox" data-a="toggleMat" data-id="' + it.id + '" ' + (on ? "checked" : "") + " " + dis + ' aria-label="Use ' + esc(it.name) + ' in this entry"><div class="n"><b data-live="D.items.' + i + '.name">' + esc(it.name) + '</b><div class="muted sm">' + esc(it.sub) + '</div></div><span class="kind">' + esc(it.kind) + '</span><button class="btn sm" data-a="toggleItem" data-id="' + it.id + '">' + (LB.tmp.openItem === it.id ? "Hide details" : "Details" + (it.firms.length || it.docs.length ? " (" + it.firms.length + " firms, " + it.docs.length + " docs)" : "")) + "</button></div>" +
+        return '<div class="item' + (on ? " on" : "") + '"><div class="item-h"><input type="checkbox" data-a="toggleMat" data-id="' + it.id + '" ' + (on ? "checked" : "") + " " + dis + ' aria-label="Use ' + esc(it.name) + ' in this entry"><div class="n"><b data-live="D.items.' + i + '.name">' + esc(it.name) + '</b><div class="muted sm">' + esc(it.sub) + "</div>" + LB.expBadge(it) + '</div><span class="kind">' + esc(it.kind) + '</span><button class="btn sm" data-a="toggleItem" data-id="' + it.id + '">' + (LB.tmp.openItem === it.id ? "Hide details" : "Details" + (it.firms.length || it.docs.length ? " (" + it.firms.length + " firms, " + it.docs.length + " docs)" : "")) + "</button></div>" +
+          (on && LB.expiredOn(it, e.date) ? '<div class="warnbox" style="margin:0 14px 10px 42px">⚠ This material expired on ' + U.fmt(it.expires) + ", before this experiment (" + U.fmt(e.date) + "). Note in Results if you used it anyway.</div>" : "") +
           (on ? '<div class="item-use"><span>Amount used</span><input type="text" placeholder="optional" aria-label="Amount used" data-b="' + PM + '.used" data-log="Edited amounts used" value="' + esc(m.used) + '" ' + dis + "><span>Left after</span><input type=\"text\" placeholder=\"optional\" aria-label=\"Amount left after the experiment\" data-b=\"" + PM + '.left" data-log="Edited amounts used" value="' + esc(m.left) + '" ' + dis + "><span>Unit</span><input type=\"text\" placeholder=\"mL, mg, vials…\" aria-label=\"Unit\" data-b=\"" + PM + '.unit" data-log="Edited amounts used" value="' + esc(m.unit) + '" ' + dis + "></div>" : "") +
           (LB.tmp.openItem === it.id ? LB.itemDetails(it) : "") + "</div>";
       }).join("") : '<div class="muted">No materials in the inventory yet.</div>') + "</div>";
@@ -145,7 +146,7 @@
       body = '<div class="muted sm">Materials used in this entry, taken from your lab inventory.</div>' + e.mats.map(m => {
         const it = D.items.find(i => i.id === m.id); if (!it) return "";
         const u = []; if (m.used) u.push("used " + m.used + " " + m.unit); if (m.left) u.push(m.left + " " + m.unit + " left");
-        return '<div class="lin"><div class="n"><b>' + esc(it.name) + '</b><div class="s">' + esc(it.sub) + "</div>" + (u.length ? '<div class="u">' + esc(u.join(" · ")) + "</div>" : "") + '</div><button class="x" data-a="toggleMat" data-id="' + it.id + '" aria-label="Unlink" ' + (e.locked ? "disabled" : "") + ">×</button></div>";
+        return '<div class="lin"><div class="n"><b>' + esc(it.name) + '</b><div class="s">' + esc(it.sub) + "</div>" + LB.expBadge(it) + (u.length ? '<div class="u">' + esc(u.join(" · ")) + "</div>" : "") + '</div><button class="x" data-a="toggleMat" data-id="' + it.id + '" aria-label="Unlink" ' + (e.locked ? "disabled" : "") + ">×</button></div>";
       }).join("") + '<button class="link sm" data-a="setSec" data-n="1">+ link or add a material</button>';
     } else if (tab === 1) {
       body = e.comments.map(c => '<div class="lin" style="flex-direction:column;gap:2px"><div class="sm" style="color:var(--acc-d);font-weight:600">' + esc(c.who) + ' <span class="muted" style="font-weight:400">· ' + U.stampStr(c.at) + '</span></div><div style="font-size:13px;line-height:1.5;white-space:pre-wrap">' + esc(c.text) + "</div></div>").join("") +
@@ -169,7 +170,17 @@
   A.setTab = el => { LB.ui.tab = +el.dataset.n; LB.saveUI(); LB.render(); };
   A.entryDate = el => { const e = LB.cur(); if (!e || !el.value) return; LB.log(e, "Changed experiment date to " + U.fmt(e.date, true)); LB.save(); LB.render(); };
   A.toggleLock = () => { const e = LB.cur(); if (!e) return; e.locked = !e.locked; LB.log(e, e.locked ? "Signed and locked" : "Unlocked for editing"); LB.save(); LB.render(); LB.toast(e.locked ? "Entry signed and locked." : "Entry unlocked for editing."); };
-  A.toggleMat = el => { const e = entryOK(); if (!e) return; const k = e.mats.findIndex(m => m.id === el.dataset.id); if (k >= 0) e.mats.splice(k, 1); else e.mats.push({ id: el.dataset.id, used: "", left: "", unit: "" }); LB.log(e, "Changed linked materials"); LB.save(); LB.render(); };
+  A.toggleMat = el => {
+    const e = entryOK(); if (!e) return; const k = e.mats.findIndex(m => m.id === el.dataset.id);
+    if (k >= 0) e.mats.splice(k, 1);
+    else {
+      e.mats.push({ id: el.dataset.id, used: "", left: "", unit: "" });
+      const it = LB.D.items.find(i => i.id === el.dataset.id), x = it && LB.expiry(it);
+      if (it && LB.expiredOn(it, e.date)) LB.toast("⚠ " + it.name + " expired on " + U.fmt(it.expires) + ", before this experiment.");
+      else if (x && x.state === "soon") LB.toast("⏳ " + it.name + ": " + x.txt.toLowerCase() + ".");
+    }
+    LB.log(e, "Changed linked materials"); LB.save(); LB.render();
+  };
   A.toggleStep = el => { const e = entryOK(); if (!e) return; const s = e.steps[+el.dataset.i]; s.done = !s.done; LB.log(e, "Ticked a step"); LB.save(); LB.render(); };
   A.rmStep = el => { const e = entryOK(); if (!e) return; e.steps.splice(+el.dataset.i, 1); LB.log(e, "Removed a step"); LB.save(); LB.render(); };
   A.addStep = el => { const e = entryOK(), v = el.value.trim(); if (!e || !v) return; e.steps.push({ t: v, done: false }); LB.tmp.newStep = ""; LB.log(e, "Added a step"); LB.save(); LB.render(); };
@@ -276,7 +287,7 @@
     if (on("aim")) h += tx("Aim", e.aim) + tx("Hypothesis", e.hyp);
     h += note("Notes", e.sn[0]);
     const mats = e.mats.map(m => ({ m, it: D.items.find(i => i.id === m.id) })).filter(r => r.it);
-    if (on("materials") && mats.length) h += '<section class="long"><h2>Materials</h2><table class="t"><tr><th>Item</th><th>Type</th><th>Details</th><th>Used</th><th>Left after</th></tr>' + mats.map(({ m, it }) => "<tr><td>" + esc(it.name) + "</td><td>" + esc(it.kind) + "</td><td>" + esc(it.sub) + "</td><td>" + esc(m.used ? (m.used + " " + m.unit).trim() : "") + "</td><td>" + esc(m.left ? (m.left + " " + m.unit).trim() : "") + "</td></tr>").join("") + "</table></section>";
+    if (on("materials") && mats.length) h += '<section class="long"><h2>Materials</h2><table class="t"><tr><th>Item</th><th>Type</th><th>Details</th><th>Expires</th><th>Used</th><th>Left after</th></tr>' + mats.map(({ m, it }) => "<tr><td>" + esc(it.name) + "</td><td>" + esc(it.kind) + "</td><td>" + esc(it.sub) + "</td><td>" + (it.expires ? (LB.expiredOn(it, e.date) ? "⚠ " : "") + U.fmt(it.expires) : "") + "</td><td>" + esc(m.used ? (m.used + " " + m.unit).trim() : "") + "</td><td>" + esc(m.left ? (m.left + " " + m.unit).trim() : "") + "</td></tr>").join("") + "</table></section>";
     if (cd.materials) h += note("Notes (materials)", e.sn[1]);
     if (on("procedure") && e.steps.length) h += '<section class="long"><h2>Procedure</h2><table class="t"><tr><th style="width:22pt">#</th><th>Step</th><th class="ck">Done</th></tr>' + e.steps.map((s, i) => "<tr><td>" + (i + 1) + "</td><td>" + esc(s.t) + '</td><td class="ck">' + (s.done ? "☑" : "☐") + "</td></tr>").join("") + "</table></section>";
     const mp = e.map, loaded = mp.cells.filter(c => c.on).length;

@@ -29,4 +29,4 @@ Open http://localhost:8123 in Chrome/Edge/Brave (the install/offline parts need 
 `<address>#/entry/<entry code or id>` opens that entry, `<address>#/calendar/YYYY-MM-DD` opens the calendar on that day (Hedgehog uses these).
 
 ## `.lbk` file format
-JSON: `{ app: "labgorilla", version: 1, saved, settings, data }` where `data` has `projects, experiments, entries, protocols, items, types, events`.
+JSON: `{ app: "labgorilla", version: 1, saved, settings, data }` where `data` has `projects, experiments, entries, protocols, items, types, events`. Each item may carry `expires` (`YYYY-MM-DD` or empty); `settings.warnDays` is how many days ahead an expiry is flagged (default 30).
