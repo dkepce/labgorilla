@@ -88,7 +88,7 @@
   const shortAuthors = a => { const l = String(a || "").split(/,\s*/).filter(Boolean); return l.length > 3 ? l[0] + " et al." : l.join(", "); };
   const cite = r => shortAuthors(r.authors) + (r.year ? " (" + r.year + ")" : "") + (r.authors || r.year ? ". " : "") + (r.title || "Untitled") + (/[.?!]$/.test(r.title || "") ? " " : ". ") + (r.journal ? r.journal + "." : "");
   const zlink = r => (r.zkey ? "zotero://select/" + (r.zlib ? r.zlib : "library") + "/items/" + r.zkey : "");
-  LB.refCite = cite; LB.refShort = shortAuthors; LB.refZlink = zlink;
+  LB.refCite = cite; LB.refShort = shortAuthors; LB.refZlink = zlink; LB.refAddTo = (owner, data) => addRef(owner, data);
   LB.refsPrint = function (owner) {
     const list = (owner.refs || []).map(x => ({ x, r: LB.D.refs.find(r => r.id === x.id) })).filter(v => v.r);
     if (!list.length) return "";
@@ -101,7 +101,7 @@
   /* the "paste a DOI / search Zotero / add by hand" bar, used by entries, protocols and the References tab */
   LB.refsAddBar = function (kind, id, owner) {
     const D = LB.D, dis = locked(owner) ? "disabled" : "", at = 'data-kind="' + kind + '" data-oid="' + id + '"'; let h = "";
-    h += '<div class="row wrap"><input type="text" class="grow" style="min-width:240px" placeholder="Paste a DOI, PubMed ID or link and press Enter" aria-label="Add a reference" data-b="tmp.refIn" data-enter="refAdd" ' + at + ' value="' + esc(LB.tmp.refIn) + '" ' + dis + ' autocomplete="off"><button class="btn sm" data-a="zotToggle" ' + at + " " + dis + '>Search Zotero</button><button class="link sm" data-a="refManual" ' + at + " " + dis + ">Add by hand</button></div>";
+    h += '<div class="row wrap"><input type="text" class="grow" style="min-width:240px" placeholder="Paste a DOI, PubMed ID or link and press Enter" aria-label="Add a reference" data-b="tmp.refIn" data-enter="refAdd" ' + at + ' value="' + esc(LB.tmp.refIn) + '" ' + dis + ' autocomplete="off"><button class="btn sm" data-a="zotToggle" ' + at + " " + dis + '>Search Zotero</button><button class="link sm" data-a="refManual" ' + at + " " + dis + ">Add by hand</button>" + (kind !== "lib" ? '<button class="link sm" data-a="libPickToggle" ' + at + " " + dis + ">From library</button>" : "") + "</div>";
     if (LB.tmp.zOpen && LB.tmp.zFor === kind + ":" + id && !locked(owner)) {
       h += '<div class="newmat">';
       if (!zready()) h += '<div class="warnbox">Connect your Zotero library first (one time).</div><div><button class="btn pri sm" data-a="zotSetup">Connect Zotero…</button></div>';
@@ -130,7 +130,7 @@
         '<button class="x" data-a="refRemove" ' + at + ' data-i="' + i + '" ' + dis + ' aria-label="Remove reference">×</button></div>';
     }).join("");
     if (!list.length) h += '<div class="muted sm">No references yet.</div>';
-    h += LB.refsAddBar(kind, id, owner);
+    h += LB.refsAddBar(kind, id, owner) + (LB.libPickPanel ? LB.libPickPanel(kind, id, owner) : "");
     return h + "</div>";
   };
 
