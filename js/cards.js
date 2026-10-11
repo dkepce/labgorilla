@@ -247,6 +247,7 @@
   A.rmCard = el => {
     const e = live(), c = e && cardById(el.dataset.card); if (!c) return;
     if (TYPES[c.type].data(c) && !confirm("Remove “" + c.title + "” from this entry? What you entered in it is deleted.")) return;
+    if (c.type === "timeline") dropCal(c.events);
     e.extra = extra(e).filter(x => x !== c); log(e, "Removed card: " + c.title); LB.save(); LB.render();
   };
   A.cardMove = el => { const e = live(), c = e && cardById(el.dataset.card); if (!c) return; const l = extra(e), i = l.indexOf(c), j = i + +el.dataset.d; if (j < 0 || j >= l.length) return; l.splice(i, 1); l.splice(j, 0, c); LB.save(); LB.render(); };
@@ -268,13 +269,35 @@
   /* timeline */
   A.tlDone = el => { const e = live(), c = e && cardById(el.dataset.card); if (!c) return; const v = c.events[+el.dataset.i]; v.done = !v.done; log(e, (v.done ? "Ticked off: " : "Unticked: ") + (v.label || "time point")); LB.save(); LB.render(); if (v.done && c.events.every(x => x.done)) LB.toast("🎉 Every time point on “" + c.title + "” is done."); };
   A.tlAdd = el => { const e = live(), c = e && cardById(el.dataset.card); if (!c) return; const days = c.events.map(v => num(v.day)).filter(isFinite); c.events.push({ day: days.length ? Math.max(...days) + 1 : 0, kind: "other", label: "", done: false }); LB.save(); LB.render(); };
-  A.tlRm = el => { const e = live(), c = e && cardById(el.dataset.card); if (!c) return; c.events.splice(+el.dataset.i, 1); LB.save(); LB.render(); };
+  A.tlRm = el => { const e = live(), c = e && cardById(el.dataset.card); if (!c) return; dropCal(c.events.splice(+el.dataset.i, 1)); LB.save(); LB.render(); };
   A.tlSort = el => { const e = live(), c = e && cardById(el.dataset.card); if (!c) return; c.events.sort((a, b) => (num(a.day) || 0) - (num(b.day) || 0)); LB.save(); LB.render(); };
   A.tlCal = el => {
     const e = live(), c = e && cardById(el.dataset.card); if (!c) return; const v = c.events[+el.dataset.i], d = num(v.day); if (!v || !isFinite(d)) { LB.toast("Give the time point a day number first."); return; }
     const ev = { id: U.uid(), date: tlDate(e, c, d), time: "", title: (v.label || (KINDS[v.kind] || KINDS.other)[1]) + " · " + e.code, kind: v.kind === "image" ? "imaging" : v.kind === "passage" ? "passage" : "other" };
-    LB.D.events.push(ev); v.calId = ev.id; LB.save(); LB.render(); LB.toast("Put on the calendar for " + U.fmt(ev.date) + ".");
+    LB.D.events.push(ev); v.calId = ev.id; v.calTitle = ev.title; v.calKind = ev.kind; LB.save(); LB.render(); LB.toast("Put on the calendar for " + U.fmt(ev.date) + ". It follows if you change the day.");
   };
+  /* Calendar events made from a time point stay linked to it: changing the day, the label, the kind, Day 0 or the
+     entry's date moves/renames the calendar event; removing the time point (or its card or entry) removes the event.
+     A title or kind she edited by hand in the calendar is left alone. The time of day is never touched. */
+  const calTitleOf = (e, v) => (v.label || (KINDS[v.kind] || KINDS.other)[1]) + " · " + e.code;
+  const calKindOf = v => (v.kind === "image" ? "imaging" : v.kind === "passage" ? "passage" : "other");
+  function dropCal(list) { const ids = (list || []).map(v => v.calId).filter(Boolean); if (ids.length) LB.D.events = LB.D.events.filter(x => !ids.includes(x.id)); }
+  LB.dropTimelineEvents = e => extra(e).forEach(c => { if (c.type === "timeline") dropCal(c.events); });
+  function syncCalendar() {
+    Object.values(LB.D.entries).forEach(e => extra(e).forEach(c => {
+      if (c.type !== "timeline") return;
+      c.events.forEach(v => {
+        const ev = v.calId && LB.D.events.find(x => x.id === v.calId), d = num(v.day); if (!ev || !isFinite(d)) return;
+        ev.date = tlDate(e, c, d);
+        if (v.calTitle === undefined) { v.calTitle = ev.title; v.calKind = ev.kind; return; }   // made before sync existed: only the date follows
+        const t = calTitleOf(e, v), k = calKindOf(v);
+        if (ev.title === v.calTitle) ev.title = t; v.calTitle = ev.title;
+        if (ev.kind === v.calKind) ev.kind = k; v.calKind = ev.kind;
+      });
+    }));
+  }
+  const baseSave = LB.save;
+  LB.save = function () { syncCalendar(); return baseSave.apply(this, arguments); };
   /* freezer box */
   A.boxFmt = el => { const e = live(), c = e && cardById(el.dataset.card); if (!c) { LB.render(); return; } if (Object.values(c.cells).some(Boolean) && !confirm("Changing the box format clears what you entered. Continue?")) { LB.render(); return; } c.fmt = el.value; c.cells = {}; LB.tmp.boxSel = {}; LB.save(); LB.render(); };
   A.boxClear = el => { const e = live(), c = e && cardById(el.dataset.card); if (!c) return; delete c.cells[+el.dataset.i]; LB.save(); LB.render(); };

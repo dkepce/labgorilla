@@ -237,7 +237,7 @@
   A.delEntry = async () => {
     const e = LB.cur(); if (!e || !confirm("Delete “" + e.title + "” for good? Its attached files are deleted too.")) return;
     for (const f of e.files) await LB.fileRemove(f);
-    delete LB.D.entries[e.id]; LB.ui.cur = ""; LB.save(); LB.saveUI(); LB.render();
+    LB.dropTimelineEvents(e); delete LB.D.entries[e.id]; LB.ui.cur = ""; LB.save(); LB.saveUI(); LB.render();
   };
   /* projects & experiments */
   A.addProj = () => { const n = prompt("Name of the new project:"); if (!n || !n.trim()) return; LB.D.projects.push({ id: U.uid(), name: n.trim() }); LB.save(); LB.render(); };
@@ -255,7 +255,7 @@
   A.delExp = async el => {
     const D = LB.D, x = D.experiments.find(z => z.id === el.dataset.id), es = Object.values(D.entries).filter(e => e.expId === x.id);
     if (!confirm("Delete experiment “" + x.name + "”" + (es.length ? " and its " + es.length + " entries (files included)" : "") + "?")) return;
-    for (const e of es) { for (const f of e.files) await LB.fileRemove(f); delete D.entries[e.id]; }
+    for (const e of es) { for (const f of e.files) await LB.fileRemove(f); LB.dropTimelineEvents(e); delete D.entries[e.id]; }
     D.experiments = D.experiments.filter(z => z !== x); if (!D.entries[LB.ui.cur]) LB.ui.cur = ""; LB.save(); LB.render();
   };
 
