@@ -77,12 +77,13 @@
     const has = (...t) => t.some(s => String(s || "").toLowerCase().includes(q));
     Object.values(D.entries).forEach(e => { if (has(e.code, e.title, e.aim, e.hyp, e.results, e.concl, e.sn.join(" "), e.steps.map(s => s.t).join(" "), e.comments.map(c => c.text).join(" "))) out.push({ k: "Entry", t: e.code + " · " + e.title, a: "gopen", kind: "entry", id: e.id }); });
     Object.entries(D.protocols).forEach(([id, p]) => { if (has(p.title, p.desc, p.steps.join(" "))) out.push({ k: "Protocol", t: p.title, a: "gopen", kind: "proto", id }); });
+    D.refs.forEach(r => { if (has(r.title, r.authors, r.journal, r.year, r.doi)) out.push({ k: "Reference", t: (r.title || "Untitled") + (r.year ? " (" + r.year + ")" : ""), a: "gopen", kind: "ref", id: r.id }); });
     D.items.forEach(i => { if (has(i.name, i.sub, i.kind)) out.push({ k: "Inventory", t: i.name + " · " + i.kind, a: "gopen", kind: "item", id: i.id }); });
     D.events.forEach(v => { if (has(v.title)) out.push({ k: "Calendar", t: U.fmt(v.date) + " · " + v.title, a: "gopen", kind: "event", id: v.id }); });
     return '<div class="gres">' + (out.length ? out.slice(0, 14).map(r => '<button data-a="' + r.a + '" data-kind="' + r.kind + '" data-id="' + r.id + '"><span class="k">' + r.k + "</span><span>" + esc(r.t) + "</span></button>").join("") : '<div class="muted sm" style="padding:8px 10px">Nothing found.</div>') + "</div>";
   }
   function topbar() {
-    const NAV = [["notebook", "Notebook"], ["protocols", "Protocols"], ["inventory", "Inventory"], ["calendar", "Calendar"]];
+    const NAV = [["notebook", "Notebook"], ["protocols", "Protocols"], ["inventory", "Inventory"], ["references", "References"], ["calendar", "Calendar"]];
     return '<header class="top"><div class="brand">' + LOGO + 'LabGorilla</div><nav class="nav">' +
       NAV.map(([k, l]) => '<button class="' + (LB.ui.view === k ? "on" : "") + '" data-a="nav" data-v="' + k + '">' + l + "</button>").join("") + '</nav><span class="grow"></span>' +
       '<div class="tsearch"><input type="text" placeholder="Search everything…" aria-label="Search everything" autocomplete="off" data-b="tmp.gq" data-rin="1" value="' + esc(LB.tmp.gq || "") + '">' + globalResults() + "</div>" +
@@ -156,6 +157,7 @@
     const { kind, id } = el.dataset; LB.tmp.gq = "";
     if (kind === "entry") LB.openEntry(id, 0);
     else if (kind === "proto") { LB.tmp.protoCur = id; LB.go("protocols"); }
+    else if (kind === "ref") { const r = LB.D.refs.find(x => x.id === id); LB.tmp.refQ = r ? (r.title || "").slice(0, 60) : ""; LB.tmp.refFolder = ""; LB.go("references"); }
     else if (kind === "item") { LB.tmp.openItem = id; LB.tmp.invQ = ""; LB.tmp.invType = ""; LB.go("inventory"); }
     else { const v = LB.D.events.find(x => x.id === id); if (v) { LB.ui.sel = v.date; const d = U.parse(v.date); LB.ui.calY = d.getFullYear(); LB.ui.calM = d.getMonth(); } LB.go("calendar"); }
   };

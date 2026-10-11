@@ -42,6 +42,13 @@
     mk(e6, 0, { title: "Syringe pump flow calibration", date: U.add(t, -9), locked: true, aim: "Compare set flow rate with measured outlet volume.", hyp: "Deviation stays below 5% down to 0.1 µL/min.", results: "Within 3% from 0.5 µL/min; 9% at 0.1 µL/min.", concl: "Use 0.5 µL/min or higher.", steps: steps(["Collect outlet for 30 min per rate"], 1), mats: m([pbs]) });
     D.events.push({ id: U.uid(), date: U.add(t, 1), time: "09:00", title: "Live/dead imaging at 24 h", kind: "imaging" }, { id: U.uid(), date: U.add(t, 2), time: "", title: "Passage MCF-7", kind: "passage" },
       { id: U.uid(), date: U.add(t, 3), time: "", title: "Start doxorubicin series", kind: "other" }, { id: U.uid(), date: U.add(t, 4), time: "", title: "Order collagen I", kind: "order" });
+    if (LB.D.refs) {   // three well-known papers as example references
+      const rf = (title, authors, journal, year, doi) => { const r = { id: U.uid(), title, authors, journal, year, doi, pmid: "", url: "", zkey: "", zlib: "", lib: true, folder: "" }; LB.D.refs.push(r); return r.id; };
+      const r1 = rf("Microfluidic organs-on-chips", "Bhatia SN, Ingber DE", "Nature Biotechnology", "2014", "10.1038/nbt.2989");
+      const r2 = rf("Hallmarks of cancer: the next generation", "Hanahan D, Weinberg RA", "Cell", "2011", "10.1016/j.cell.2011.02.013");
+      const r3 = rf("Spheroid-based drug screen: considerations and practical approach", "Friedrich J, Seidel C, Ebner R, Kunz-Schughart LA", "Nature Protocols", "2009", "10.1038/nprot.2008.226");
+      cur.refs = [{ id: r1, note: "Chip design, Figure 2" }, { id: r3, note: "" }]; D.protocols[pSph].refs = [{ id: r3, note: "Spheroid sizes" }];
+    }
     LB.ui.cur = cur.id; LB.ui.view = "notebook"; LB.ui.sec = 0; LB.ui.openExp[e7.id] = true;
   };
 })(window.LB);

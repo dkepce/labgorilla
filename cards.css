@@ -163,6 +163,16 @@ body.dragging .fhead,body.dragging .th{transition:background .1s}
 .fsel{border:1px solid #d6d9e6;border-radius:8px;padding:6px 8px;background:#fff;min-width:130px;font-weight:500}
 .page .row>label .fsel{margin-top:2px}
 
+/* references library */
+.chipbtn{border:1px solid var(--acc-m);background:var(--acc-s);color:var(--acc-d);border-radius:99px;padding:1px 9px;font-size:11px;font-weight:600}
+.chipbtn:hover{background:var(--acc-m)}
+.paper .invrow .n{flex:1;min-width:0}
+.paper .invrow .n b{display:block;line-height:1.35}
+.plist .nrow .cnt{margin-left:auto}
+.plist .nrow:hover .cnt{display:inline}
+.plist .nrow .tools{margin-left:4px}
+.plist .nrow:hover .tools{display:inline-flex}
+
 /* top-bar logo */
 .brand .logo{width:28px;height:28px;border-radius:7px;display:block}
 

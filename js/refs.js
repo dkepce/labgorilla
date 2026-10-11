@@ -63,12 +63,14 @@
   }
 
   /* ---------- storing ---------- */
-  const ownerOf = el => (el.dataset.kind === "entry" ? LB.D.entries[el.dataset.oid] : LB.D.protocols[el.dataset.oid]);
+  LB.libOwner = { _lib: true, refs: [] };
+  const ownerOf = el => (el.dataset.kind === "lib" ? LB.libOwner : el.dataset.kind === "entry" ? LB.D.entries[el.dataset.oid] : LB.D.protocols[el.dataset.oid]);
   const locked = o => !!(o && o.locked);
   function addRef(owner, data) {
     const D = LB.D;
     let ref = D.refs.find(r => (data.doi && r.doi && r.doi.toLowerCase() === data.doi.toLowerCase()) || (data.pmid && r.pmid === data.pmid) || (data.zkey && r.zkey === data.zkey && (r.zlib || "") === (data.zlib || "")) || (!data.doi && !data.zkey && data.url && r.url === data.url));
     if (!ref) { ref = Object.assign({ id: U.uid(), title: "", authors: "", journal: "", year: "", doi: "", pmid: "", url: "", zkey: "", zlib: "" }, data); D.refs.push(ref); }
+    if (owner._lib) { const had = ref.lib; ref.lib = true; return had ? false : ref; }
     owner.refs = owner.refs || [];
     if (owner.refs.some(x => x.id === ref.id)) return false;
     owner.refs.push({ id: ref.id, note: "" });
@@ -86,17 +88,37 @@
   const shortAuthors = a => { const l = String(a || "").split(/,\s*/).filter(Boolean); return l.length > 3 ? l[0] + " et al." : l.join(", "); };
   const cite = r => shortAuthors(r.authors) + (r.year ? " (" + r.year + ")" : "") + (r.authors || r.year ? ". " : "") + (r.title || "Untitled") + (/[.?!]$/.test(r.title || "") ? " " : ". ") + (r.journal ? r.journal + "." : "");
   const zlink = r => (r.zkey ? "zotero://select/" + (r.zlib ? r.zlib : "library") + "/items/" + r.zkey : "");
+  LB.refCite = cite; LB.refShort = shortAuthors; LB.refZlink = zlink;
   LB.refsPrint = function (owner) {
-    const list = (owner.refs || []).map(x => LB.D.refs.find(r => r.id === x.id)).filter(Boolean);
+    const list = (owner.refs || []).map(x => ({ x, r: LB.D.refs.find(r => r.id === x.id) })).filter(v => v.r);
     if (!list.length) return "";
-    return '<section class="long rec"><h2>References</h2>' + (owner.refs || []).map((x, i) => { const r = LB.D.refs.find(z => z.id === x.id); if (!r) return ""; return "<div>[" + (i + 1) + "] " + esc(cite(r)) + (r.doi ? " doi:" + esc(r.doi) : r.url ? " " + esc(r.url) : "") + (x.note ? '<br><span class="small">Note: ' + esc(x.note) + "</span>" : "") + "</div>"; }).join("") + "</section>";
+    const style = LB.ui.refStyle === "authoryear" ? "authoryear" : "numbered";
+    if (style === "authoryear") list.sort((p, q) => (p.r.authors || p.r.title || "").localeCompare(q.r.authors || q.r.title || "") || String(p.r.year).localeCompare(String(q.r.year)));
+    const line = ({ x, r }, i) => "<div>" + (style === "numbered" ? "[" + (i + 1) + "] " : "") + esc(cite(r)) + (r.doi ? " doi:" + esc(r.doi) : r.url ? " " + esc(r.url) : "") + (x.note ? '<br><span class="small">Note: ' + esc(x.note) + "</span>" : "") + "</div>";
+    return '<section class="long rec"><h2>References</h2>' + list.map(line).join("") + "</section>";
+  };
+
+  /* the "paste a DOI / search Zotero / add by hand" bar, used by entries, protocols and the References tab */
+  LB.refsAddBar = function (kind, id, owner) {
+    const D = LB.D, dis = locked(owner) ? "disabled" : "", at = 'data-kind="' + kind + '" data-oid="' + id + '"'; let h = "";
+    h += '<div class="row wrap"><input type="text" class="grow" style="min-width:240px" placeholder="Paste a DOI, PubMed ID or link and press Enter" aria-label="Add a reference" data-b="tmp.refIn" data-enter="refAdd" ' + at + ' value="' + esc(LB.tmp.refIn) + '" ' + dis + ' autocomplete="off"><button class="btn sm" data-a="zotToggle" ' + at + " " + dis + '>Search Zotero</button><button class="link sm" data-a="refManual" ' + at + " " + dis + ">Add by hand</button></div>";
+    if (LB.tmp.zOpen && LB.tmp.zFor === kind + ":" + id && !locked(owner)) {
+      h += '<div class="newmat">';
+      if (!zready()) h += '<div class="warnbox">Connect your Zotero library first (one time).</div><div><button class="btn pri sm" data-a="zotSetup">Connect Zotero…</button></div>';
+      else {
+        h += '<div class="row"><input type="text" class="grow" placeholder="Search your Zotero library: title, author, year, tag…" aria-label="Search Zotero" data-b="tmp.zq" data-enter="zotSearch" value="' + esc(LB.tmp.zq) + '" autocomplete="off"><button class="btn sm" data-a="zotSearch">Search</button></div>' + (LB.tmp.zmsg ? '<div class="muted sm">' + esc(LB.tmp.zmsg) + "</div>" : "");
+        h += LB.tmp.zres.map((r, k) => { const have = (owner._lib ? D.refs.filter(f => f.lib) : (owner.refs || []).map(x => D.refs.find(z => z.id === x.id)).filter(Boolean)).some(f => (r.zkey && f.zkey === r.zkey) || (r.doi && f.doi && f.doi.toLowerCase() === r.doi.toLowerCase())); return '<div class="row" style="align-items:flex-start;background:#fff;border:1px solid #e3e5ee;border-radius:8px;padding:8px 10px"><div class="grow sm">' + esc(cite(r)) + '</div><button class="btn sm" data-a="zotAdd" ' + at + ' data-k="' + k + '" ' + (have ? "disabled" : "") + ">" + (have ? "Added ✓" : "Add") + "</button></div>"; }).join("");
+      }
+      h += "</div>";
+    }
+    return h;
   };
 
   /* ---------- the card ---------- */
   LB.refsCard = function (kind, owner, id) {
     const D = LB.D, dis = locked(owner) ? "disabled" : "", P = (kind === "entry" ? "D.entries." : "D.protocols.") + id, at = 'data-kind="' + kind + '" data-oid="' + id + '"';
     const list = (owner.refs || []).map((x, i) => ({ x, i, r: D.refs.find(r => r.id === x.id) })).filter(v => v.r);
-    let h = '<div class="card"><div class="row"><h3 class="grow">References</h3><button class="link sm" data-a="zotSetup">' + (zready() ? "Zotero connected ✓ (settings)" : "Connect Zotero…") + "</button></div>" +
+    let h = '<div class="card"><div class="row"><h3 class="grow">References</h3>' + (list.length ? '<button class="link sm" data-a="risOwner" ' + at + ' title="Download these references to import into Zotero, EndNote or Mendeley">Export .ris</button>' : "") + '<button class="link sm" data-a="zotSetup">' + (zready() ? "Zotero connected ✓ (settings)" : "Connect Zotero…") + "</button></div>" +
       '<div class="muted sm">The papers behind this ' + (kind === "entry" ? "experiment" : "protocol") + ". Paste a DOI, PubMed ID or link, or search your Zotero library.</div>";
     h += list.map(({ x, i, r }, n) => {
       const ri = D.refs.indexOf(r), PR = "D.refs." + ri, other = citedElsewhere(r.id, owner), editing = LB.tmp.refEdit === r.id;
@@ -108,16 +130,7 @@
         '<button class="x" data-a="refRemove" ' + at + ' data-i="' + i + '" ' + dis + ' aria-label="Remove reference">×</button></div>';
     }).join("");
     if (!list.length) h += '<div class="muted sm">No references yet.</div>';
-    h += '<div class="row wrap"><input type="text" class="grow" style="min-width:240px" placeholder="Paste a DOI, PubMed ID or link and press Enter" aria-label="Add a reference" data-b="tmp.refIn" data-enter="refAdd" ' + at + ' value="' + esc(LB.tmp.refIn) + '" ' + dis + ' autocomplete="off"><button class="btn sm" data-a="zotToggle" ' + at + " " + dis + '>Search Zotero</button><button class="link sm" data-a="refManual" ' + at + " " + dis + ">Add by hand</button></div>";
-    if (LB.tmp.zOpen && LB.tmp.zFor === kind + ":" + id && !locked(owner)) {
-      h += '<div class="newmat">';
-      if (!zready()) h += '<div class="warnbox">Connect your Zotero library first (one time).</div><div><button class="btn pri sm" data-a="zotSetup">Connect Zotero…</button></div>';
-      else {
-        h += '<div class="row"><input type="text" class="grow" placeholder="Search your Zotero library: title, author, year, tag…" aria-label="Search Zotero" data-b="tmp.zq" data-enter="zotSearch" value="' + esc(LB.tmp.zq) + '" autocomplete="off"><button class="btn sm" data-a="zotSearch">Search</button></div>' + (LB.tmp.zmsg ? '<div class="muted sm">' + esc(LB.tmp.zmsg) + "</div>" : "");
-        h += LB.tmp.zres.map((r, k) => { const have = (owner.refs || []).some(x => { const f = D.refs.find(z => z.id === x.id); return f && ((r.zkey && f.zkey === r.zkey) || (r.doi && f.doi && f.doi.toLowerCase() === r.doi.toLowerCase())); }); return '<div class="row" style="align-items:flex-start;background:#fff;border:1px solid #e3e5ee;border-radius:8px;padding:8px 10px"><div class="grow sm">' + esc(cite(r)) + '</div><button class="btn sm" data-a="zotAdd" ' + at + ' data-k="' + k + '" ' + (have ? "disabled" : "") + ">" + (have ? "Added ✓" : "Add") + "</button></div>"; }).join("");
-      }
-      h += "</div>";
-    }
+    h += LB.refsAddBar(kind, id, owner);
     return h + "</div>";
   };
 
@@ -173,7 +186,7 @@
     const x = o.refs[+el.dataset.i]; if (!x) return;
     o.refs.splice(+el.dataset.i, 1);
     const used = Object.values(LB.D.entries).some(e => (e.refs || []).some(z => z.id === x.id)) || Object.values(LB.D.protocols).some(p => (p.refs || []).some(z => z.id === x.id));
-    if (!used) LB.D.refs = LB.D.refs.filter(r => r.id !== x.id);
+    if (!used && !(LB.D.refs.find(r => r.id === x.id) || {}).lib) LB.D.refs = LB.D.refs.filter(r => r.id !== x.id);
     if (o.hist) LB.log(o, "Removed a reference");
     LB.save(); LB.render();
   };

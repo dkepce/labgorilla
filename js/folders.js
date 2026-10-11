@@ -3,23 +3,25 @@
    Things move by drag and drop (onto a folder or project heading) or with the Folder menu in their details. */
 (function (LB) {
   const U = LB.U, esc = U.esc, A = LB.actions;
-  const NAME = { proto: "protocol", item: "item" };
+  const NAME = { proto: "protocol", item: "item", ref: "paper" };
   LB.ui.fold = LB.ui.fold || {};
 
   /* data: always have the lists, and forget folder ids that no longer exist */
   const baseFix = LB.fixData;
   LB.fixData = function () {
     baseFix();
-    const D = LB.D; D.folders = D.folders || {}; D.folders.proto = D.folders.proto || []; D.folders.item = D.folders.item || [];
+    const D = LB.D; D.folders = D.folders || {}; D.folders.proto = D.folders.proto || []; D.folders.item = D.folders.item || []; D.folders.ref = D.folders.ref || [];
     Object.values(D.protocols).forEach(p => { if (!D.folders.proto.some(f => f.id === p.folder)) p.folder = ""; });
     D.items.forEach(i => { if (!D.folders.item.some(f => f.id === i.folder)) i.folder = ""; });
+    D.refs.forEach(r => { if (!D.folders.ref.some(f => f.id === r.folder)) r.folder = ""; });
   };
   LB.fixData();
 
   const list = scope => LB.D.folders[scope];
   const find = (scope, id) => list(scope).find(f => f.id === id);
-  const target = (scope, id) => (scope === "proto" ? LB.D.protocols[id] : LB.D.items.find(i => i.id === id));
-  const count = (scope, fid) => (scope === "proto" ? Object.values(LB.D.protocols) : LB.D.items).filter(o => (o.folder || "") === fid).length;
+  const all = scope => (scope === "proto" ? Object.values(LB.D.protocols) : scope === "ref" ? LB.D.refs : LB.D.items);
+  const target = (scope, id) => (scope === "proto" ? LB.D.protocols[id] : all(scope).find(i => i.id === id));
+  const count = (scope, fid) => all(scope).filter(o => (o.folder || "") === fid).length;
   const key = (scope, fid) => scope + ":" + fid;
 
   /* ---------- rendering helpers ---------- */
@@ -42,9 +44,10 @@
   LB.dragAttrs = (scope, id) => ' draggable="true" data-drag="' + scope + ":" + id + '"';
   LB.dragHandle = (scope, id) => (list(scope).length ? '<span class="dh"' + LB.dragAttrs(scope, id) + ' title="Drag onto a folder" aria-label="Drag to a folder">⠿</span>' : "");
   /* the Folder menu inside details */
-  LB.folderSelect = function (scope, obj, id) {
-    return '<label><span class="lbl">Folder</span><br><select class="fsel" data-file="setFolder" data-scope="' + scope + '" data-id="' + id + '"><option value="">No folder</option>' +
-      list(scope).map(f => '<option value="' + f.id + '"' + ((obj.folder || "") === f.id ? " selected" : "") + ">" + esc(f.name) + "</option>").join("") + '<option value="__new">＋ New folder…</option></select></label>';
+  LB.folderSelect = function (scope, obj, id, compact) {
+    const sel = '<select class="fsel" aria-label="Folder" data-file="setFolder" data-scope="' + scope + '" data-id="' + id + '"><option value="">No folder</option>' +
+      list(scope).map(f => '<option value="' + f.id + '"' + ((obj.folder || "") === f.id ? " selected" : "") + ">" + esc(f.name) + "</option>").join("") + '<option value="__new">＋ New folder…</option></select>';
+    return compact ? sel : '<label><span class="lbl">Folder</span><br>' + sel + "</label>";
   };
   LB.folderButton = scope => '<button class="link sm" data-a="foldAdd" data-scope="' + scope + '">＋ New folder</button>';
 
@@ -60,7 +63,7 @@
   A.foldDel = el => {
     const scope = el.dataset.scope, f = find(scope, el.dataset.k); if (!f) return; const n = count(scope, f.id);
     if (!confirm("Delete the folder “" + f.name + "”?" + (n ? "\n\nIts " + n + " " + NAME[scope] + (n > 1 ? "s are" : " is") + " kept and moved to “No folder”." : ""))) return;
-    (scope === "proto" ? Object.values(LB.D.protocols) : LB.D.items).forEach(o => { if (o.folder === f.id) o.folder = ""; });
+    all(scope).forEach(o => { if (o.folder === f.id) o.folder = ""; });
     LB.D.folders[scope] = list(scope).filter(x => x !== f); LB.save(); LB.render();
   };
   function moveInto(scope, id, fid) {
