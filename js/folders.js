@@ -28,7 +28,7 @@
   function head(scope, f, n) {
     const id = f ? f.id : "", shut = LB.ui.fold[key(scope, id)] === true;
     return '<div class="fhead" data-a="foldToggle" data-scope="' + scope + '" data-k="' + id + '" data-drop="' + scope + ":" + id + '" role="button" tabindex="0" aria-expanded="' + (shut ? "false" : "true") + '">' +
-      '<span class="fchev">' + (shut ? "▸" : "▾") + '</span><span class="ficon" aria-hidden="true">' + (f ? "📁" : "📄") + "</span><b>" + esc(f ? f.name : "No folder") + '</b><span class="muted sm">' + n + "</span>" +
+      '<span class="fchev">' + (shut ? "▸" : "▾") + '</span><span class="ficon" aria-hidden="true">' + (f ? LB.icons.folder(!shut, 18) : LB.icons.doc(16)) + "</span><b>" + esc(f ? f.name : "No folder") + '</b><span class="muted sm">' + n + "</span>" +
       (f ? '<span class="tools"><button class="x" data-a="foldRename" data-scope="' + scope + '" data-k="' + id + '" title="Rename folder" aria-label="Rename folder">✎</button><button class="x" data-a="foldDel" data-scope="' + scope + '" data-k="' + id + '" title="Delete folder (its ' + NAME[scope] + 's are kept)" aria-label="Delete folder">🗑</button></span>' : "") + "</div>";
   }
   /* html for a list of things, grouped under their folders. Without any folder it is just the plain list. */
@@ -111,7 +111,7 @@
   LB.moveModal = function () {
     const D = LB.D, x = D.experiments.find(z => z.id === LB.tmp.mv); if (!x) return "";
     return '<div class="backdrop" data-a="closeModal"><div class="modal"><h2>Move experiment</h2><div class="muted sm">“' + esc(x.name) + "” and all its entries move to the project you pick. Entry codes stay the same.</div>" +
-      '<div class="col" style="gap:6px">' + D.projects.map(p => '<button class="btn" style="text-align:left" data-a="moveExpTo" data-id="' + p.id + '" ' + (p.id === x.projectId ? "disabled" : "") + ">📁 " + esc(p.name) + (p.id === x.projectId ? " (current)" : "") + "</button>").join("") + "</div>" +
+      '<div class="col" style="gap:6px">' + D.projects.map(p => '<button class="btn" style="text-align:left" data-a="moveExpTo" data-id="' + p.id + '" ' + (p.id === x.projectId ? "disabled" : "") + ">" + LB.icons.folder(false, 16) + " " + esc(p.name) + (p.id === x.projectId ? " (current)" : "") + "</button>").join("") + "</div>" +
       '<div class="row" style="justify-content:space-between"><button class="link sm" data-a="moveExpNew">＋ New project…</button><button class="btn" data-a="closeModal" data-force="1">Cancel</button></div></div></div>';
   };
 })(window.LB);

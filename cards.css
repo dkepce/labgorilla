@@ -222,3 +222,8 @@ textarea.mono{font:12px/1.5 var(--mono)}
   #print .dp-t{font-size:9px}
   #print table.t pre{margin:0}
 }
+
+/* blue folder icons */
+.fi{display:block;flex-shrink:0}
+.nrow .ico,.fhead .ficon{display:inline-flex;align-items:center;justify-content:center;width:20px}
+label.btn .fi,button .fi{display:inline-block;vertical-align:-3px;margin-right:2px}

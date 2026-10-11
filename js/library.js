@@ -127,10 +127,10 @@
     const D = LB.D, f = folderFilter(), fs = D.folders.ref, n = D.refs.length, none = D.refs.filter(r => !r.folder).length;
     const row = (cls, attrs, ico, name, cnt, tools) => '<div class="nrow ' + cls + '"' + attrs + ' role="button" tabindex="0"><span class="ico" aria-hidden="true">' + ico + '</span><span class="nm">' + name + '</span><span class="cnt">' + cnt + "</span>" + (tools ? '<span class="tools">' + tools + "</span>" : "") + "</div>";
     return '<aside class="plist" data-scroll="plist"><button class="btn pri" data-a="refAddToggle">＋ Add paper</button><div class="lbl" style="padding:4px 4px 0">Library</div><div class="ftree">' +
-      row("proj" + (!f ? " ent on" : ""), ' data-a="refFolder" data-k=""', "📚", "All papers", n) +
-      fs.map(x => row(f === x.id ? "ent on" : "", ' data-a="refFolder" data-k="' + x.id + '" data-drop="ref:' + x.id + '"', "📁", esc(x.name), D.refs.filter(r => r.folder === x.id).length,
+      row("proj" + (!f ? " ent on" : ""), ' data-a="refFolder" data-k=""', LB.icons.stack(18), "All papers", n) +
+      fs.map(x => row(f === x.id ? "ent on" : "", ' data-a="refFolder" data-k="' + x.id + '" data-drop="ref:' + x.id + '"', LB.icons.folder(f === x.id, 18), esc(x.name), D.refs.filter(r => r.folder === x.id).length,
         '<button class="x" data-a="foldRename" data-scope="ref" data-k="' + x.id + '" title="Rename folder" aria-label="Rename folder">✎</button><button class="x" data-a="foldDel" data-scope="ref" data-k="' + x.id + '" title="Delete folder (its papers are kept)" aria-label="Delete folder">🗑</button>')).join("") +
-      (fs.length ? row(f === "__none" ? "ent on" : "", ' data-a="refFolder" data-k="__none" data-drop="ref:"', "📄", "No folder", none) : "") + "</div>" +
+      (fs.length ? row(f === "__none" ? "ent on" : "", ' data-a="refFolder" data-k="__none" data-drop="ref:"', LB.icons.doc(16), "No folder", none) : "") + "</div>" +
       LB.folderButton("ref") + (fs.length ? '<div class="muted sm" style="padding:4px 4px 0;line-height:1.45">Drag a paper onto a folder, or use its folder menu.</div>' : "") + "</aside>";
   }
 

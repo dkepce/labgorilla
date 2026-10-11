@@ -25,16 +25,16 @@
         if (q && !es.length) return;
         shown++;
         const xOpen = q || LB.ui.openExp[x.id] !== false;
-        body += row("exp" + (x.id === curX ? " path" : ""), ' data-a="toggleExp" data-id="' + x.id + '"' + LB.dragAttrs("exp", x.id), xOpen ? "▾" : "▸", xOpen ? "📂" : "📁", LB.expCode(x) + " · " + esc(x.name), all.length,
+        body += row("exp" + (x.id === curX ? " path" : ""), ' data-a="toggleExp" data-id="' + x.id + '"' + LB.dragAttrs("exp", x.id), xOpen ? "▾" : "▸", LB.icons.folder(xOpen), LB.expCode(x) + " · " + esc(x.name), all.length,
           '<button class="x" data-a="newEntry" data-exp="' + x.id + '" title="New entry here">＋</button><button class="x" data-a="moveExp" data-id="' + x.id + '" title="Move to another project">⇄</button><button class="x" data-a="renameExp" data-id="' + x.id + '" title="Rename">✎</button><button class="x" data-a="delExp" data-id="' + x.id + '" title="Delete experiment">🗑</button>');
-        if (xOpen) body += '<div class="fkids">' + (es.map(e => '<button class="nrow ent' + (e.id === LB.ui.cur ? " on" : "") + '" data-a="openEntry" data-id="' + e.id + '"><span class="chev"></span><span class="ico" aria-hidden="true">📄</span><span class="d">' + U.fmt(e.date, false) + '</span><span class="nm" data-live="D.entries.' + e.id + '.title">' + esc(e.title) + "</span></button>").join("") || '<div class="muted sm" style="padding:2px 8px 4px 34px">No entries yet</div>') + "</div>";
+        if (xOpen) body += '<div class="fkids">' + (es.map(e => '<button class="nrow ent' + (e.id === LB.ui.cur ? " on" : "") + '" data-a="openEntry" data-id="' + e.id + '"><span class="chev"></span><span class="ico" aria-hidden="true">' + LB.icons.doc(15) + '</span><span class="d">' + U.fmt(e.date, false) + '</span><span class="nm" data-live="D.entries.' + e.id + '.title">' + esc(e.title) + "</span></button>").join("") || '<div class="muted sm" style="padding:2px 8px 4px 34px">No entries yet</div>') + "</div>";
       });
       if (q && !shown) return;
-      h += row("proj" + (p.id === curP ? " path" : ""), ' data-a="toggleProj" data-id="' + p.id + '" data-drop="exp:' + p.id + '"', pOpen ? "▾" : "▸", pOpen ? "📂" : "📁", esc(p.name), exps.length,
+      h += row("proj" + (p.id === curP ? " path" : ""), ' data-a="toggleProj" data-id="' + p.id + '" data-drop="exp:' + p.id + '"', pOpen ? "▾" : "▸", LB.icons.folder(pOpen), esc(p.name), exps.length,
         '<button class="x" data-a="addExp" data-id="' + p.id + '" title="New experiment">＋</button><button class="x" data-a="renameProj" data-id="' + p.id + '" title="Rename">✎</button><button class="x" data-a="delProj" data-id="' + p.id + '" title="Delete project">🗑</button>');
       if (pOpen) h += '<div class="fkids">' + (body || '<div class="muted sm" style="padding:2px 8px 4px 34px">No experiments yet</div>') + "</div>";
     });
-    h += '</div><button class="link sm" data-a="addProj" style="margin-top:6px">📁 + New project</button></aside>';
+    h += '</div><button class="link sm" data-a="addProj" style="margin-top:6px">' + LB.icons.folder(false, 16) + ' New project</button></aside>';
     return h;
   }
 
